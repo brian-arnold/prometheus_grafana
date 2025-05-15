@@ -1,0 +1,48 @@
+# Create a PersistentVolume for Prometheus
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: prometheus-storage
+  hostPath:
+    path: "/mnt/lab/k8s_apps/prometheus"
+    type: DirectoryOrCreate
+
+# Create a PersistentVolume for Grafana
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: grafana-storage  # Custom storage class name
+  hostPath:
+    path: "/mnt/lab/k8s_apps/grafana"
+    type: DirectoryOrCreate
+  
+# Create StorageClass for Prometheus and Grafana
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: prometheus-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: Immediate # ensures the volumes are bound immediately when persistent volume claims are created, as opposed to waiting for a pod to be scheduled
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: grafana-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: Immediate
