@@ -1,0 +1,4 @@
+(label_replace(kube_node_status_capacity{resource="nvidia_com_gpu"}, "Hostname", "$1", "node", "(.*)") != on(Hostname) count by (Hostname) (DCGM_FI_DEV_GPU_UTIL))
+
+Use 'kubectl describe node <node-name>' to confirm that kubernetes thinks there are fewer GPUs than expected, where expected is determined by DCGM_FI_DEV_GPU_UTIL from the nvidia-dcgm-exporter pod on that node. To fix, restart nvidia-device-plugin-daemonset pod on affected node.
+

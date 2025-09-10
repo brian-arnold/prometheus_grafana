@@ -11,10 +11,10 @@ spec:
   ingressClassName: nginx  # Use this instead of annotation
   tls:
   - hosts:
-    - grafana.atlab.stanford.edu
+    - grafana.enigmatic.stanford.edu
     secretName: grafana-tls
   rules:
-  - host: grafana.atlab.stanford.edu
+  - host: grafana.enigmatic.stanford.edu
     http:
       paths:
       - path: /
