@@ -1,0 +1,408 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Detect/Diagnose CPU throttling for containers",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 31,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "uid": "$cluster"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "cpu cores",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/Throttle/"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "throttling percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "dataLinks": [],
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$cluster"
+          },
+          "expr": "rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod_name=~\"$pod\", container_name=~\"$container\"}[1m])",
+          "legendFormat": "CPU Cores Usage {{pod_name}} {{container_name}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "uid": "$cluster"
+          },
+          "expr": "sum by (namespace,pod_name, container_name) ((container_cpu_cfs_throttled_periods_total{container_name=~\"$container\", pod_name=~\"$pod\", namespace=\"$namespace\"} / container_cpu_cfs_periods_total{container_name=~\"$container\", pod_name=~\"$pod\", namespace=\"$namespace\"}) * 100)",
+          "legendFormat": "Throttle Percent {{pod_name}} {{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage vs Throttling Percent",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "uid": "$cluster"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "cpu cores",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/Throttle/"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "throttling percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "dataLinks": [],
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$cluster"
+          },
+          "expr": "rate(container_cpu_usage_seconds_total{namespace=~\"$namespace2\", pod_name=~\"$pod2\", container_name=~\"$container2\"}[1m])",
+          "legendFormat": "CPU Cores Usage {{pod_name}} {{container_name}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "uid": "$cluster"
+          },
+          "expr": "sum by (namespace,pod_name, container_name) ((container_cpu_cfs_throttled_periods_total{container_name=~\"$container2\",pod_name=~\"$pod2\", namespace=\"$namespace2\"} / container_cpu_cfs_periods_total{container_name=~\"$container2\",pod_name=~\"$pod2\", namespace=\"$namespace2\"}) * 100)",
+          "legendFormat": "Throttle Percent {{pod_name}} {{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage vs Throttling Percent",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "Prometheus",
+          "value": "prometheus"
+        },
+        "includeAll": false,
+        "name": "cluster",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "argocd",
+          "value": "argocd"
+        },
+        "datasource": "$cluster",
+        "definition": "label_values(container_cpu_usage_seconds_total, namespace)",
+        "includeAll": false,
+        "name": "namespace",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total, namespace)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$cluster",
+        "definition": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace\"}, pod_name)",
+        "includeAll": true,
+        "multi": true,
+        "name": "pod",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace\"}, pod_name)",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$cluster",
+        "definition": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod_name=~\"$pod\"}, container_name)",
+        "includeAll": true,
+        "multi": true,
+        "name": "container",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod_name=~\"$pod\"}, container_name)",
+        "refresh": 2,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "argocd",
+          "value": "argocd"
+        },
+        "datasource": "$cluster",
+        "definition": "label_values(container_cpu_usage_seconds_total, namespace)",
+        "includeAll": false,
+        "name": "namespace2",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total, namespace)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$cluster",
+        "definition": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace2\"}, pod_name)",
+        "includeAll": true,
+        "multi": true,
+        "name": "pod2",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace2\"}, pod_name)",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$cluster",
+        "definition": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace2\", pod_name=~\"$pod2\"}, container_name)",
+        "includeAll": true,
+        "multi": true,
+        "name": "container2",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total{namespace=\"$namespace2\", pod_name=~\"$pod2\"}, container_name)",
+        "refresh": 2,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Container CPU Usage vs Throttling Percentage",
+  "uid": "kOjTBvyZk",
+  "version": 2
+}

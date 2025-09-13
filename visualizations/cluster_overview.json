@@ -88,6 +88,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -798,5 +799,5 @@
   "timezone": "browser",
   "title": "Cluster Overview",
   "uid": "demsw8vndd14wa",
-  "version": 51
+  "version": 55
 }
