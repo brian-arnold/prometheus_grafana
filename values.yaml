@@ -1,9 +1,10 @@
 prometheus:
   prometheusSpec:
+    retention: 21d
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: prometheus-storage
+          storageClassName: prometheus-storage 
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -25,4 +26,4 @@ grafana:
   persistence:
     enabled: true
     storageClassName: grafana-storage
-    size: 10Gi
+    size: 2Gi
