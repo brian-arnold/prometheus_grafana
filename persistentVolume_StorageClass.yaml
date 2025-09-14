@@ -1,8 +1,19 @@
+# Static Storage Provisioning for Prometheus/Grafana
+# 
+# APPROACH: Static provisioning with node-pinned local storage
+# - Pre-created PVs with hostPath storage on at-compute010:/mnt/md0/k8s_apps/
+# - StorageClass uses no-provisioner (no dynamic allocation)
+# - Pods constrained to at-compute010 via nodeSelector for storage access
+#
+# BENEFITS: Fast local SSD/RAID storage, predictable performance
+# LIMITATIONS: Single node dependency, no automatic failover
+
+
 # Create a PersistentVolume for Prometheus
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: prometheus-pv
+  name: prometheus-pv-atcompute010
 spec:
   capacity:
     storage: 50Gi
@@ -11,7 +22,8 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: prometheus-storage
   hostPath:
-    path: "/mnt/lab/k8s_apps/prometheus"
+    # need to also do: sudo chown -R 1000:2000 /mnt/md0/k8s_apps/prometheus since prometheus runs with user 1000 and group id 2000
+    path: "/mnt/md0/k8s_apps/prometheus"
     type: DirectoryOrCreate
 
 # Create a PersistentVolume for Grafana
@@ -19,7 +31,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: grafana-pv
+  name: grafana-pv-atcompute010
 spec:
   capacity:
     storage: 10Gi
@@ -28,7 +40,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: grafana-storage  # Custom storage class name
   hostPath:
-    path: "/mnt/lab/k8s_apps/grafana"
+    path: "/mnt/md0/k8s_apps/grafana"
     type: DirectoryOrCreate
   
 # Create StorageClass for Prometheus and Grafana

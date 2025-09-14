@@ -1,0 +1,74 @@
+# Ray Cluster Monitoring PodMonitors
+# 
+# PURPOSE: These PodMonitors enable Prometheus to scrape Ray application metrics
+# from Ray cluster head and worker nodes.
+#
+# WHY NEEDED: The kube-prometheus-stack provides infrastructure monitoring 
+# (CPU, memory, network) for all pods via kubelet, but Ray application metrics
+# require custom configuration because:
+#   - Ray exposes application-specific metrics (tasks, actors, resources) 
+#     on custom ports (44217, 44227) that aren't monitored by default
+#   - Ray metrics need special labeling (ray_io_cluster) for Grafana dashboards
+#   - These are application-level metrics, not infrastructure metrics
+#
+# DEPLOYMENT: Apply these PodMonitors AFTER installing kube-prometheus-stack
+# They extend the base monitoring with Ray-specific application monitoring.
+#
+# DASHBOARD: These enable the Ray Grafana dashboard to display cluster metrics
+# by ensuring Prometheus discovers and scrapes Ray pods with proper labels.
+
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    release: prometheus  # This matches your Prometheus selector
+  name: ray-head-monitor
+  namespace: monitoring  # Change from prometheus-system to monitoring
+spec:
+  jobLabel: ray-head
+  namespaceSelector:
+    matchNames:
+      - ray  # Change from default to ray (where your clusters are)
+  selector:
+    matchLabels:
+      ray.io/node-type: head
+  podMetricsEndpoints:
+    - port: metrics
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_label_ray_io_cluster
+          targetLabel: ray_io_cluster
+    - port: as-metrics
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_label_ray_io_cluster
+          targetLabel: ray_io_cluster
+    - port: dash-metrics
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_label_ray_io_cluster
+          targetLabel: ray_io_cluster
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ray-workers-monitor
+  namespace: monitoring  # Changed from prometheus-system
+  labels:
+    release: prometheus
+spec:
+  jobLabel: ray-workers
+  namespaceSelector:
+    matchNames:
+      - ray  # Changed from default
+  selector:
+    matchLabels:
+      ray.io/node-type: worker
+  podMetricsEndpoints:
+  - port: metrics
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_ray_io_cluster]
+      targetLabel: ray_io_cluster

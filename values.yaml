@@ -1,5 +1,7 @@
 prometheus:
   prometheusSpec:
+    nodeSelector:
+      kubernetes.io/hostname: at-compute010
     retention: 21d
     storageSpec:
       volumeClaimTemplate:
@@ -23,7 +25,16 @@ prometheus:
             interval: 15s
 
 grafana:
+  nodeSelector:
+    kubernetes.io/hostname: at-compute010
   persistence:
     enabled: true
     storageClassName: grafana-storage
     size: 2Gi
+  # added to allow embedding Grafana panels in Ray Dashboard 
+  grafana.ini:
+    security:
+      allow_embedding: true
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
