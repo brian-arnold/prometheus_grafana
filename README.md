@@ -1,6 +1,8 @@
 # Background
 This prometheus/grafana stack deployment is simple. Prometheus seems to require local storage, so here we deploy a single instance of prometheus and grafana on a specific node (at-compute010) and use subdirectories within /mnt/md0 for these apps to store their data. If these pods ever crash, we have them deploy to the same node so that they still have access to their data within node-specific /mnt/md0. 
 
+See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/prometheus-grafana.html#using-prometheus-and-grafana) for how to monitor Ray resources with prometheus and grafana.
+
 # Installation
 - add prometheus helm repo and update
     - `helm repo add prometheus-community https://prometheus-community.github.io/helm-charts`
