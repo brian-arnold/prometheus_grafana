@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: enigma-apps
+  # prevent annotations: too long error in ArgoCD: https://github.com/prometheus-community/helm-charts/issues/3345
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+  # install via helm chart from prometheus-community, using valuesObject instead of values.yaml file
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "77.6.2"
+    helm:
+      releaseName: prometheus
+      valuesObject:
+        nodeExporter:
+          serviceMonitor:
+            additionalLabels:
+              release: prometheus
+            # service monitor looks for 'instance: prometheus' by default, but service has 'instance: monitoring'
+            selector:
+              matchLabels:
+                app.kubernetes.io/instance: monitoring
+                app.kubernetes.io/name: prometheus-node-exporter
+        prometheus:
+          prometheusSpec:
+            nodeSelector:
+              kubernetes.io/hostname: at-compute010
+            retention: 30d
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: prometheus-storage 
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 50Gi
+            additionalServiceMonitors:
+              - name: nvidia-dcgm-exporter
+                selector:
+                  matchLabels:
+                    app: nvidia-dcgm-exporter
+                namespaceSelector:
+                  matchNames:
+                    - gpu-operator
+                endpoints:
+                  - port: gpu-metrics
+                    interval: 15s
+        grafana:
+          # Disable init container that sets ownership - conflicts with existing hostPath data
+          initChownData:
+            enabled: false
+          nodeSelector:
+            kubernetes.io/hostname: at-compute010
+          persistence:
+            enabled: true
+            storageClassName: grafana-storage
+            size: 2Gi
+          grafana.ini:
+            security:
+              allow_embedding: true
+            auth.anonymous:
+              enabled: true
+              org_role: Viewer
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+  # Allow ConfigMaps to be deletable in order to remove unwanted Grafana dashboards 
+  # that come with kube-prometheus-stack without ArgoCD recreating them
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: prometheus-kube-prometheus-*
+      jsonPointers:
+        - /data
