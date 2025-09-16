@@ -25,6 +25,9 @@ prometheus:
             interval: 15s
 
 grafana:
+  # Disable init container that sets ownership - conflicts with existing hostPath data
+  initChownData:
+    enabled: false
   nodeSelector:
     kubernetes.io/hostname: at-compute010
   persistence:
