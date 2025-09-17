@@ -11,18 +11,18 @@ prometheus:
           resources:
             requests:
               storage: 50Gi
-    # add additional serive monitor to allow prometheus to scrape metrics from nvidia-dcgm-exporter
-    additionalServiceMonitors:
-      - name: nvidia-dcgm-exporter
-        selector:
-          matchLabels:
-            app: nvidia-dcgm-exporter  # Adjust this to match your service's labels
-        namespaceSelector:
-          matchNames:
-            - gpu-operator
-        endpoints:
-          - port: gpu-metrics
-            interval: 15s
+  # add additional serive monitor to allow prometheus to scrape metrics from nvidia-dcgm-exporter
+  additionalServiceMonitors:
+    - name: nvidia-dcgm-exporter
+      selector:
+        matchLabels:
+          app: nvidia-dcgm-exporter  # Adjust this to match your service's labels
+      namespaceSelector:
+        matchNames:
+          - gpu-operator
+      endpoints:
+        - port: gpu-metrics
+          interval: 15s
 
 grafana:
   sidecar:
