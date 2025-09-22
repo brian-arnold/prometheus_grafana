@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 46,
+  "id": 305,
   "links": [],
   "panels": [
     {
@@ -539,5 +539,5 @@
   "timezone": "browser",
   "title": "Architecture",
   "uid": "demwcq3u1ga2oa",
-  "version": 20
+  "version": 2
 }
