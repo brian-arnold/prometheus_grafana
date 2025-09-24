@@ -32,6 +32,11 @@ grafana:
       folderAnnotation: "grafana_folder" # custom dashboards can be organized by using the grafana_folder label in your configmap.
       provider:
        foldersFromFilesStructure: true
+    alerts:
+      enabled: true
+      label: grafana_alert
+      labelValue: "1"
+      searchNamespace: ALL
   # Disable init container that sets ownership - conflicts with existing hostPath data
   initChownData:
     enabled: false
@@ -45,6 +50,7 @@ grafana:
   grafana.ini:
     security:
       allow_embedding: true
+      admin_user: admin  
     auth.anonymous:
       enabled: true
       org_role: Viewer
