@@ -64,7 +64,7 @@ data:
                 summary: Use 'kubectl describe node <node-name>' to confirm that kubernetes thinks there are fewer GPUs than expected, where expected is determined by DCGM_FI_DEV_GPU_UTIL from the nvidia-dcgm-exporter pod on that node. To fix, restart nvidia-device-plugin-daemonset pod on affected node.
               isPaused: false
               notification_settings:
-                receiver: Brian
+                receiver: enigma-slack-k8s-alerts
             - uid: beyp2wfg8fbi8e
               title: at-storageB1_M
               condition: C
@@ -89,7 +89,7 @@ data:
                     conditions:
                         - evaluator:
                             params:
-                                - 90
+                                - 2
                             type: gt
                           operator:
                             type: and
@@ -113,4 +113,4 @@ data:
               for: 1h
               isPaused: false
               notification_settings:
-                receiver: Brian
+                receiver: enigma-slack-k8s-alerts 

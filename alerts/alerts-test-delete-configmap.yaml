@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-delete-rules
+  namespace: monitoring
+  labels:
+    grafana_alert: "1"
+data:
+  delete-rules.yaml: |
+    apiVersion: 1
+    deleteRules:
+      - orgId: 1
+        uid: aeyw1nust9reob
+      - orgId: 1
+        uid: aeyp1u9wiy1vkc
+      - orgId: 1
+        uid: beyp2wfg8fbi8e
