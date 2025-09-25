@@ -1,9 +1,6 @@
 # Background
 This prometheus/grafana stack deployment is simple. Prometheus seems to require local storage, so here we deploy a single instance of prometheus and grafana on a specific node (at-compute010) and use subdirectories within /mnt/md0 for these apps to store their data. If these pods ever crash, we have them deploy to the same node so that they still have access to their data within node-specific /mnt/md0. 
 
-See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/prometheus-grafana.html#using-prometheus-and-grafana) for how to monitor Ray resources with prometheus and grafana.
-
-See [here](https://github.com/minio/directpv/blob/master/docs/monitoring.md) for how to scrape directpv metrics with prometheus.
 
 # Installation
 - add prometheus helm repo and update
@@ -20,6 +17,12 @@ See [here](https://github.com/minio/directpv/blob/master/docs/monitoring.md) for
 - helm install kube-prom-stack, using `values.yaml` file to have helm create PersistentVolumeClaims for the PVs based on the storage classes
     - `helm install prometheus prometheus-community/kube-prometheus-stack -f values.yaml --namespace monitoring`
     - this `values.yaml` file also creates an additional servicemonitor for `nvidia-dcgm-exporter` for GPU monitoring
+
+# Additional configuration
+
+See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/prometheus-grafana.html#using-prometheus-and-grafana) for how to monitor Ray resources with prometheus and grafana.
+
+See [here](https://github.com/minio/directpv/blob/master/docs/monitoring.md) for how to scrape directpv metrics with prometheus, but also see [here](https://docs.min.io/enterprise/aistor-volume-manager/concepts/metrics/), which shows that there may be fewer metrics supported.
 
 # Change admin password
 I've had better luck managing the admin password through this command compared to editing within the GUI, where I noticed it stoppped working (but this could have been due to upgrades), and if I get locked out I can just do the following:
