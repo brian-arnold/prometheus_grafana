@@ -3,6 +3,8 @@ This prometheus/grafana stack deployment is simple. Prometheus seems to require 
 
 See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/prometheus-grafana.html#using-prometheus-and-grafana) for how to monitor Ray resources with prometheus and grafana.
 
+See [here](https://github.com/minio/directpv/blob/master/docs/monitoring.md) for how to scrape directpv metrics with prometheus.
+
 # Installation
 - add prometheus helm repo and update
     - `helm repo add prometheus-community https://prometheus-community.github.io/helm-charts`
