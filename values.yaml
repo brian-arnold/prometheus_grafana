@@ -12,6 +12,12 @@ prometheus:
             requests:
               storage: 50Gi
     
+    additionalScrapeConfigsSecret:
+      enabled: true
+      # for MinIO, put scrape config in a secret b/c it requires a token
+      name: additional-scrape-configs-minio
+      key: prometheus-minio.yaml
+
     additionalScrapeConfigs:
       # directPV
       - job_name: 'directpv-metrics'
