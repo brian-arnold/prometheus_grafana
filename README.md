@@ -20,6 +20,9 @@ This prometheus/grafana stack deployment is simple. Prometheus seems to require 
 
 # Additional configuration
 
+### NVIDIA DCGM exporter
+Added service monitor in values file.
+
 ### Ray
 See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/prometheus-grafana.html#using-prometheus-and-grafana) for how to monitor Ray resources with prometheus and grafana.
 
