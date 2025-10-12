@@ -22,6 +22,15 @@ This prometheus/grafana stack deployment is simple. Prometheus seems to require 
 
 The kube-prometheus-stack provides infrastructure monitoring for all pods via kubelet, but some application metrics require custom configuration.
 
+#### kube-controller-manager
+Kube-controller-manager is a collection of different Kubernetes controllers, all of them included in a binary and running permanently in a loop. Read more [here](https://www.sysdig.com/blog/how-to-monitor-kube-controller-manager).
+
+By default, the kube-controller-manager has a bind address of 127.0.0.1 such that only pods on it's local network (machine hosting control plane) can reach it, so in order for the prometheus server to scrape it, change to 0.0.0.0 by SSH'ing into the control plant (at-kubemaster1) and change the appropriate field:
+
+```
+sudo vi /etc/kubernetes/manifests/kube-controller-manager.yaml
+```
+
 ### NVIDIA DCGM exporter
 Added service monitor in values file.
 
