@@ -22,7 +22,7 @@ This prometheus/grafana stack deployment is simple. Prometheus seems to require 
 
 The kube-prometheus-stack provides infrastructure monitoring for all pods via kubelet, but some application metrics require custom configuration.
 
-#### kube-controller-manager
+### kube-controller-manager
 Kube-controller-manager is a collection of different Kubernetes controllers, all of them included in a binary and running permanently in a loop. Read more [here](https://www.sysdig.com/blog/how-to-monitor-kube-controller-manager).
 
 By default, the kube-controller-manager has a bind address of 127.0.0.1 such that only pods on it's local network (machine hosting control plane) can reach it, so in order for the prometheus server to scrape it, change to 0.0.0.0 by SSH'ing into the control plant (at-kubemaster1) and change the appropriate field:
@@ -40,9 +40,13 @@ See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/promet
   - `kubectl apply -f ray_podmonitors.yaml`
 - See docs in `ray_podmonitors.yaml` for more info.
 
-## DirectPV and Minio
+### Velero
 
-### DirectPV 
+The Velero helm chart has the option to create a ServiceMonitor for prometheus to scrape. Please see the helm chart for more information. Briefly, you needed to specify in the chart that you wanted a service monitor created and to add the `release: prometheus` label since your instance of prometheus looks for service monitors with that label.
+
+### DirectPV and Minio
+
+#### DirectPV 
 
 According to their docs, Both DirectPV and Minio are configured for prometheus via additional scrape configs, in the helm values file under `additionalScrapeConfigs` or `additionalScrapeConfigsSecret`. However, the option with secrets CANNOT be used with the other option; you can only use one or the other (see default values file for note on this). We thus need to use the secret option because we store a MinIO token.
 
@@ -50,7 +54,7 @@ See [here](https://github.com/minio/directpv/blob/master/docs/monitoring.md) for
 
 Setting up for DirectPV was pretty straightforward as the scrape config they supply can be copy/pasted into the values file under additionalScrapeConfigs or into the secrets file, explained below.
 
-### MinIO
+#### MinIO
 See [here](https://docs.min.io/community/minio-object-store/operations/monitoring/collect-minio-metrics-using-prometheus.html) for how to scrape metrics from MinIO.
 
 Implementing the steps in the tutorial above:
