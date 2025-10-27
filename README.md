@@ -25,11 +25,43 @@ The kube-prometheus-stack provides infrastructure monitoring for all pods via ku
 ### kube-controller-manager
 Kube-controller-manager is a collection of different Kubernetes controllers, all of them included in a binary and running permanently in a loop. Read more [here](https://www.sysdig.com/blog/how-to-monitor-kube-controller-manager).
 
-By default, the kube-controller-manager has a bind address of 127.0.0.1 such that only pods on it's local network (machine hosting control plane) can reach it, so in order for the prometheus server to scrape it, change to 0.0.0.0 by SSH'ing into the control plant (at-kubemaster1) and change the appropriate field:
+By default, the kube-controller-manager has a bind address of 127.0.0.1 such that only pods on it's local network (machine hosting control plane) can reach it, so in order for the prometheus server to scrape it, change to 0.0.0.0 by SSH'ing into the control plane (at-kubemaster1) and change the appropriate field:
 
 ```
 sudo vi /etc/kubernetes/manifests/kube-controller-manager.yaml
 ```
+
+and change `--bind-address=127.0.0.1` to `--bind-address=0.0.0.0`.
+
+### kube-scheduler
+
+The kubernetes scheduler is a control plane component responsible for assigning newly created pods to available nodes. It continuously monitors for pods that do not have a node assigned and determines the most suitable node for them.
+
+Like the controller manager, the default kube-scheduler pod has a bind address of 127.0.0.1 such that it's only listening on local host and unreachable by the prometheus server for metric scraping. To fix, SSH into the control plane and use
+
+```
+sudo vi /etc/kubernetes/manifests/kube-scheduler.yaml
+```
+
+to change `--bind-address=127.0.0.1` to `--bind-address=0.0.0.0`.
+### kube-proxy
+
+kube-proxy runs as a daemonset on the cluster, one pod per node, and plays a crucial role in implementing the kubernetes Service concept, ensuring that network requests to services are correctly routed to the appropriate pods.
+
+Executing kubectl describe daemonsets kube-proxy -n kube-system seemed to show little configuration info but I noticed under the Volumes section it referred to a config map. Further executing kubectl describe cm kube-proxy -n kube-system shows a field metricsBindAddress: "", meaning metrics are disabled. To enable, this should be changed to metricsBindAddress: "0.0.0.0:10249" using
+```
+kubectl edit cm kube-proxy -n kube-system
+```
+then restarting the daemonset using 
+```
+kubectl rollout restart daemonset kube-proxy -n kube-system
+```
+
+
+### etcd
+Etcd is an open-source, distributed key-value store that serves as the primary data store for Kubernetes. It's a critial component for maintaining the state and configuration of a kubernetes cluster.
+
+Like the kube-controller-manager, the default etcd config has `--listen-metrics-urls=http://127.0.0.1:2381`, meaning it is only listening on localhost. Change this to `0.0.0.0:2381`.
 
 ### NVIDIA DCGM exporter
 Added service monitor in values file.
