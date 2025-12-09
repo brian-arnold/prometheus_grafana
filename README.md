@@ -61,7 +61,11 @@ kubectl rollout restart daemonset kube-proxy -n kube-system
 ### etcd
 Etcd is an open-source, distributed key-value store that serves as the primary data store for Kubernetes. It's a critial component for maintaining the state and configuration of a kubernetes cluster.
 
-Like the kube-controller-manager, the default etcd config has `--listen-metrics-urls=http://127.0.0.1:2381`, meaning it is only listening on localhost. Change this to `0.0.0.0:2381`.
+Like the kube-controller-manager, the default etcd config has `--listen-metrics-urls=http://127.0.0.1:2381`, meaning it is only listening on localhost. Change this to `0.0.0.0:2381` by logging into the control plane node and doing
+
+```
+sudo vi /etc/kubernetes/manifests/etcd.yaml
+```
 
 ### NVIDIA DCGM exporter
 Added service monitor in values file.
