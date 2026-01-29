@@ -55,6 +55,17 @@ prometheus:
         - port: gpu-metrics
           interval: 15s
 
+prometheus-node-exporter:
+  # allow more unavaiable nodes to account for some problematic ones that may not restart
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 5
+  # this section here was taken from the default values file and modified to exclude |mnt/lbm[0-9]+ 
+  extraArgs:
+    - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+|mnt/lbm[0-9]+)($|/)
+    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
+
 grafana:
   sidecar:
     dashboards:
@@ -77,11 +88,13 @@ grafana:
     enabled: true
     storageClassName: grafana-storage
     size: 2Gi
-  # added to allow embedding Grafana panels in Ray Dashboard 
+  # added to allow embedding Grafana panels in Ray Dashboard, 
+  # have grafana.ini->auth.anonymous->enabled: true and grafana.ini->auth.anonynmous->org_role: Viewer
+  # however, this also allows anyone access to the URL visibility into your dashboards
   grafana.ini:
     security:
       allow_embedding: true
       admin_user: admin  
     auth.anonymous:
-      enabled: true
+      enabled: false
       org_role: Viewer
