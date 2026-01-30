@@ -1,8 +1,9 @@
-# Background
-This prometheus/grafana stack deployment is simple. Prometheus seems to require local storage, so here we deploy a single instance of prometheus and grafana on a specific node (at-compute010) and use subdirectories within /mnt/md0 for these apps to store their data. If these pods ever crash, we have them deploy to the same node so that they still have access to their data within node-specific /mnt/md0. 
+# Prometheus/Grafana Stack for Kubernetes Monitoring
 
+## Background
+This prometheus/grafana stack deployment is simple. Prometheus seems to require local storage, so here we deploy a single instance of prometheus and grafana on a specific node (at-compute010) and use subdirectories within /mnt/md0 for these apps to store their data. If these pods ever crash, we have them deploy to the same node so that they still have access to their data within node-specific /mnt/md0.
 
-# Installation
+## Installation
 - add prometheus helm repo and update
     - `helm repo add prometheus-community https://prometheus-community.github.io/helm-charts`
     - `helm repo update`
@@ -18,160 +19,13 @@ This prometheus/grafana stack deployment is simple. Prometheus seems to require 
     - `helm install prometheus prometheus-community/kube-prometheus-stack -f values.yaml --namespace monitoring`
     - this `values.yaml` file also creates an additional servicemonitor for `nvidia-dcgm-exporter` for GPU monitoring
 
-# Additional configuration
 
-See [here](docs/additional-configuration.md) for notes on configuring the kube-prometheus stack for specific pods/apps.
+## Documentation
 
-# Change admin password
-I've had better luck managing the admin password through this command compared to editing within the GUI, where I noticed it stoppped working (but this could have been due to upgrades), and if I get locked out I can just do the following:
-```
-kubectl exec -n monitoring deployment/prometheus-grafana -- grafana-cli admin reset-admin-password <PASSWORD> 
-```
+For detailed information on specific topics, see the documentation in the [docs](docs/) directory:
 
-# Managing Alert rules as files
-
-### Exporting/importing alert rules
-
-Although dashboards can be exported and imported via the GUI, Grafana GUI only allows export. Importing them is a little trickier and involves 
-  1. Exporting the rules in the Alerting -> Alert rules tab, click 'Export rules' in the 'Grafana-managed' section. Export as a YAML file
-  2. Put the contents of this YAML in a ConfigMap; see `alerts-test-configmap.yaml` in the alerts subdirectory for an example
-  3. You need to make sure the Grafana alerts sidecar is in the helm chart; this sidecar scans for ConfigMaps
-  4. Apply the configmap using `kubectl apply -f`
-  5. Confirm the YAML file specified in the ConfifMap now exists in the Grafana instance
-  ```
-  kubectl exec deployment/prometheus-grafana -n monitoring -c grafana -- ls -la /etc/grafana/provisioning/alerting/
-  ```
-  6. Reload the provisioned files using the Grafana Admin HTTP API. This step is MANDATORY. On your local machine:
-  ```
-  kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-  curl -X POST -u admin:<PASSWORD> http://localhost:3000/api/admin/provisioning/alerting/reload
-  ```
-  If you have issues with the password, see the note above on Admin passwords.
-  7. The Alerts should be present both in the Dashboards section (see the 'Alert rules' tab in the Alerts folder) and the Alert rules section
-
-
-### Setting up Slack contact point
-- If the contact point still exists for the alert rules specified in the config map, no need to do anything. Or, you could create a new contact point in the Grafana GUI and replace the `receiver` field in the config maps for the alert rules with the new name of the contact point.
-
-#### UNDER CONSTRUCTION (THERE MAY BE BETTER WAYS TO STORE SLACK TOKENS AS SECRETS)
-- However, you can also specify Slack contact points as config maps. See 'Configuring contact points' below for more info about configuring with Slack.
-- To specify Slack contact point as config map: 
-  1. Export contacts in Grafana GUI as YAML, put into config map, e.g. `contact-points.yaml` in this repo.
-  1. Remove the slack bot token from configmap file, replace with $SLACK_BOT_TOKEN, and store it as a secret using `kubectl create secret generic slack-bot-token -n monitoring --from-literal=token='xoxb-TOKENTOKENTOKEN'`
-
-### Deleting alert rules that have been provisioned as files via ConfigMaps
-
-Deleting provisioned Alert rules is extremely [tedious](https://github.com/grafana/grafana/issues/67036):
-  1. First, you need to delete the ConfigMaps that define the alert rules you want to delete
-  2. As described [here](https://grafana.com/docs/grafana/latest/developers/http_api/alerting_provisioning/), deleting alert rules needs to be done by UID
-  3. First get the UIDs, the following exports information that includes the UIDs in a JSON format
-```
-kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-curl -u admin:<PASSWORD> http://localhost:3000/api/v1/provisioning/alert-rules
-```
-  4. Then create a ConfigMap specifying `deleteRules`, see an example in `alerts-test-delete-configmap.yaml`
-  5. Apply the ConfigMap, reload using the Admin HTTP API as described above, and then delete the ConfigMap
-
-
-# Configuring contact points
-- For Slack integration, see (here)[https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/configure-slack/]
-  - After their step 2, in the OAuth & Permissions section, make sure to 'Install to Enigma'
-
-
-# Add ingress for grafana dahsboards
-Flow:
-Internet → nginx-ingress → prometheus-grafana service → Grafana pod
-
-- Apply the grafana ingress
-  - `kubectl apply -f grafana-ingress.yaml`
-
-- confirm running + configured properly
-  - `kubectl get ingress -A`
-
-- to remove
-  - `kubectl delete ingress grafana-ingress -n monitoring`
-
-- test it
-  - `curl -k -H "Host: grafana.atlab.stanford.edu" https://10.107.158.11/`
-
-
-# Workflow for Dashboards and Alerts 
-
-## Dashboards
-
-### Workflow
-
-Create the dashboard in Grafana, within a folder
-
-When the dashboard is mature, export the particular dashboard as JSON (can't export an entire folder), and put in a configmap, specifying that it's a dashboard and the folder in the config map:
-
-```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: monitoring
-  name: test-storage
-  labels:
-    app: test-storage
-    grafana_dashboard: "1"
-  annotations:
-    grafana_folder: "Test"
-data: 
-  dashboard1.json: |-
-    YAML/JSON
-```
-
-if you ever need to make adjustments, you can copy the JSON content and import as a new dashboard. You'll have to change the UID. Make the edits you need, export the JSON to your clipboard, and replace the content in the configmap.
-
-## Alerts
-
-### Constraints
-
-Alerts need to have an evaluation group that specifies how often the metric gets evaluated. If a provisioned alert uses an evaluation group, no new alerts made in the GUI can use this group (it's not available in drop down menu). Otherwise, they can have the same folder name
-
-### ### Workflow Workflow
-
-When designing new ALERT RULES (i.e. not recording rules) for the first time, specify an existing folder, evaluation group, and contact point
-
-When done, we can export it to a ConfigMap
-
-Under Alert rules tab on the left, go to Grafana-managed section
-
-find the new alert rule, and on the right, you'll see an icon that looks like an "i" with a circle around it, "rule group details"
-
-click this icon and you will see a button at the upper right to export JUST these rules
-
-copy this code, and put it in an existing config map or a new one
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: monitoring
-  name: test-storage-alerts
-  labels:
-    app: test-storage-alerts
-    grafana_alert: "1"
-  annotations:
-    grafana_folder: "Test"
-data: 
-  alerts1.json: |-
-    YAML/JSON
-
-When you make new alert rules, you can no longer use the same evaluation group. Instead, give the new alert rule a suffix, e.g. -dev. Then, when this rule is ready to be moved to a config map for automatic provisioning, change the name field containing the evaluation group name to match the one you've decided to use in config-maps
-
-e.g. if you suffixed the eval group with -dev, just find and remove this string
-
-e.g. use 1hr-evalfor configmaps and 1hr-eval-dev for experimenting
-
-If you ever need to update the contact point, modify the receiver subfield in the configmap
-
-# Appendix
-
-## Putting grafana dashboards in subfolders via configmaps
-- For making grafana dashboards via config maps AND in subfolders, see [here](https://github.com/grafana/helm-charts/issues/526)
-  - See `resources` subdir for an example of a configmap that creates a subfolder
-- See [here](https://github.com/prometheus-community/helm-charts/issues/4493) for how to put default dashboards into a subfolder
-
-## Deleting grafana dashboards that automatically come with helm installation
-- these cannot be removed in the GUI
-- You need to delete the [ConfigMaps](https://stackoverflow.com/questions/65308780/disable-default-dashboards-in-the-prometheus-community-helm-chart#:~:text=I%20was%20facing%20the%20same%20issue%20and%20the%20way%20I%20resolved%20it%20was%20to%20remove%20the%20respective%20config%20maps%20which%20have%20been%20generated%20by%20the%20kube%2Dprometheus%2Dstack%20helm%20chart.), you should see config maps with names corresponding to the porovisioned dashboards.
+- **[Additional Configuration](docs/additional-configuration.md)** - Configure monitoring for specific Kubernetes components (kube-controller-manager, kube-scheduler, kube-proxy, etcd, NVIDIA DCGM exporter)
+- **[Managing Alerts](docs/managing-alerts.md)** - Export/import alert rules, set up Slack notifications, and manage alert rules via ConfigMaps
+- **[Dashboards and Alerts Workflow](docs/dashboards-and-alerts-workflow.md)** - Step-by-step workflows for creating and managing dashboards and alert rules
+- **[Ingress Setup](docs/ingress-setup.md)** - Configure ingress to access Grafana dashboards externally
+- **[Troubleshooting](docs/troubleshooting.md)** - Advanced topics including changing the admin password, subfolder configuration, and deleting default dashboards
