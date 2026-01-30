@@ -2,12 +2,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: monitoring
-  name: test-storage-minio
+  name: dashboard-storage-minio
   labels:
-    app: test-storage-minio
+    app: dashboard-storage-minio
     grafana_dashboard: "1"
   annotations:
-    grafana_folder: "Test"
+    grafana_folder: "Storage"
 data: 
   dashboard1.json: |-
     {
@@ -3646,6 +3646,6 @@ data:
     },
     "timezone": "",
     "title": "MinIO Dashboard",
-    "uid": "MinIODashboard",
+    "uid": "dashboard-storage-minio",
     "version": 4
     }
