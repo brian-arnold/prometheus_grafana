@@ -46,7 +46,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -81,7 +82,7 @@
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "11.6.0",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "editorMode": "code",
@@ -164,7 +165,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -176,10 +178,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 22,
+            "h": 23,
             "w": 11,
             "x": 0,
-            "y": 25
+            "y": 43
           },
           "id": 3,
           "options": {
@@ -206,7 +208,7 @@
             "sizing": "auto",
             "valueMode": "color"
           },
-          "pluginVersion": "11.6.0",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "editorMode": "code",
@@ -235,7 +237,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -250,7 +253,7 @@
             "h": 12,
             "w": 12,
             "x": 11,
-            "y": 25
+            "y": 43
           },
           "id": 6,
           "options": {
@@ -277,7 +280,7 @@
             "sizing": "auto",
             "valueMode": "color"
           },
-          "pluginVersion": "11.6.0",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "editorMode": "code",
@@ -292,7 +295,7 @@
           "type": "bargauge"
         }
       ],
-      "title": "CPUs/GPUs by node",
+      "title": "Number CPUs/GPUs",
       "type": "row"
     },
     {
@@ -320,7 +323,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   }
                 ]
               }
@@ -328,10 +332,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 21,
-            "w": 9,
+            "h": 23,
+            "w": 10,
             "x": 0,
-            "y": 70
+            "y": 3
           },
           "id": 7,
           "options": {
@@ -358,7 +362,7 @@
             "sizing": "auto",
             "valueMode": "color"
           },
-          "pluginVersion": "11.6.0",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "editorMode": "code",
@@ -387,7 +391,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   }
                 ]
               }
@@ -395,10 +400,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 11,
+            "h": 12,
             "w": 9,
             "x": 10,
-            "y": 70
+            "y": 3
           },
           "id": 9,
           "options": {
@@ -425,7 +430,7 @@
             "sizing": "auto",
             "valueMode": "color"
           },
-          "pluginVersion": "11.6.0",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "editorMode": "code",
@@ -440,7 +445,7 @@
           "type": "bargauge"
         }
       ],
-      "title": "Memory by node",
+      "title": "Total Memory",
       "type": "row"
     },
     {
@@ -477,7 +482,7 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 14,
+            "h": 15,
             "w": 17,
             "x": 0,
             "y": 4
@@ -538,7 +543,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Architecture",
+  "title": "Hardware inventory",
   "uid": "demwcq3u1ga2oa",
-  "version": 5
+  "version": 11
 }

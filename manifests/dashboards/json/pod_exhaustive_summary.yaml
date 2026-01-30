@@ -146,8 +146,8 @@
         ]
       },
       "gridPos": {
-        "h": 7,
-        "w": 12,
+        "h": 8,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -177,7 +177,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate5m{namespace=\"$namespace\", pod=\"$pod\", cluster=\"$cluster\", container!=\"\"}) by (container)",
+          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{\n    namespace=\"$namespace\", \n    pod=\"$pod\", \n    cluster=\"$cluster\", \n    container!=\"\",\n    job=\"kubelet\"\n}[30s]))",
           "legendFormat": "{{container}}",
           "range": true,
           "refId": "A"
@@ -304,8 +304,8 @@
       "gridPos": {
         "h": 7,
         "w": 12,
-        "x": 12,
-        "y": 0
+        "x": 0,
+        "y": 8
       },
       "id": 2,
       "interval": "1m",
@@ -340,6 +340,110 @@
         }
       ],
       "title": "CPU Throttling",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "CPU usage + throttled seconds rate = approximate total CPU demand (what the container would use if unlimited)\n\nThe rate of throttled seconds can be thought of as the additional CPU cores needed to eliminate throttling.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 65,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (container) (rate(container_cpu_usage_seconds_total{\n    namespace=\"$namespace\", \n    pod=\"$pod\", \n    cluster=\"$cluster\", \n    container!=\"\",\n    job=\"kubelet\"\n}[1m]))",
+          "legendFormat": "{{container}} :: cpu usage seconds",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (container) (rate(container_cpu_cfs_throttled_seconds_total{\n    namespace=\"$namespace\", \n    pod=\"$pod\", \n    cluster=\"$cluster\", \n    container!=\"\",\n}[1m]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{container}} :: cpu throttled seconds",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "CPU  usage vs throttled",
       "transparent": true,
       "type": "timeseries"
     },
@@ -408,7 +512,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 7
+        "y": 15
       },
       "id": 19,
       "options": {
@@ -505,7 +609,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 7
+        "y": 15
       },
       "id": 18,
       "options": {
@@ -586,7 +690,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 22
       },
       "id": 3,
       "options": {
@@ -817,7 +921,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 26
       },
       "id": 4,
       "interval": "1m",
@@ -936,14 +1040,14 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 33
       },
       "id": 21,
       "options": {
         "legend": {
           "calcs": [],
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -957,7 +1061,7 @@
         {
           "editorMode": "code",
           "expr": "sum by (container, name)(\n  rate(container_memory_failures_total{\n    namespace=\"$namespace\",\n    pod=\"$pod\",\n    failure_type=\"pgmajfault\",\n    job=\"kubelet\",\n    container!=\"\"\n  }[1m])\n)",
-          "legendFormat": "{{container}} :: {{name}}",
+          "legendFormat": "{{container}}",
           "range": true,
           "refId": "A"
         }
@@ -1031,7 +1135,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 40
       },
       "id": 20,
       "options": {
@@ -1057,7 +1161,7 @@
           "refId": "A"
         }
       ],
-      "title": "Total OOM events",
+      "title": "Total OOM events (WARNING: I DON\"T THINK THIS WORKS)",
       "transparent": true,
       "type": "timeseries"
     },
@@ -1111,7 +1215,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 47
       },
       "id": 5,
       "options": {
@@ -1332,7 +1436,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 51
       },
       "id": 22,
       "options": {
@@ -1427,7 +1531,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 58
       },
       "id": 23,
       "options": {
@@ -1523,7 +1627,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 57
+        "y": 65
       },
       "id": 6,
       "interval": "1m",
@@ -1625,7 +1729,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 57
+        "y": 65
       },
       "id": 7,
       "interval": "1m",
@@ -1727,7 +1831,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 72
       },
       "id": 8,
       "interval": "1m",
@@ -1829,7 +1933,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 72
       },
       "id": 9,
       "interval": "1m",
@@ -1931,7 +2035,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 71
+        "y": 79
       },
       "id": 10,
       "interval": "1m",
@@ -2033,7 +2137,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 71
+        "y": 79
       },
       "id": 11,
       "interval": "1m",
@@ -2135,7 +2239,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 78
+        "y": 86
       },
       "id": 12,
       "interval": "1m",
@@ -2246,7 +2350,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 78
+        "y": 86
       },
       "id": 13,
       "interval": "1m",
@@ -2357,7 +2461,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 85
+        "y": 93
       },
       "id": 14,
       "interval": "1m",
@@ -2459,7 +2563,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 85
+        "y": 93
       },
       "id": 15,
       "interval": "1m",
@@ -2556,7 +2660,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 92
+        "y": 100
       },
       "id": 16,
       "options": {
@@ -2695,8 +2799,8 @@
     "list": [
       {
         "current": {
-          "text": "Prometheus",
-          "value": "prometheus"
+          "text": "default",
+          "value": "default"
         },
         "label": "Data source",
         "name": "datasource",
@@ -2727,8 +2831,8 @@
       },
       {
         "current": {
-          "text": "enigma-devenvs",
-          "value": "enigma-devenvs"
+          "text": "argocd",
+          "value": "argocd"
         },
         "datasource": {
           "type": "prometheus",
@@ -2744,8 +2848,8 @@
       },
       {
         "current": {
-          "text": "blahner-dev-environment-0",
-          "value": "blahner-dev-environment-0"
+          "text": "argocd-application-controller-0",
+          "value": "argocd-application-controller-0"
         },
         "datasource": {
           "type": "prometheus",
@@ -2762,12 +2866,12 @@
     ]
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "utc",
-  "title": "Pod exhaustive summary",
+  "title": "Exhaustive summary",
   "uid": "7691e46e4e5c7ba40a07646395ef7b23",
-  "version": 80
+  "version": 90
 }
