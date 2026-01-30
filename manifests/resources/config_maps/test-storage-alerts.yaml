@@ -1,0 +1,703 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: monitoring
+  name: test-storage-alerts
+  labels:
+    app: test-storage-alerts
+    grafana_alert: "1"
+  annotations:
+    grafana_folder: "Test"
+data: 
+  alerts1.json: |-
+    apiVersion: 1
+    groups:
+        - orgId: 1
+          name: 1hr-eval
+          folder: Test
+          interval: 1h
+          rules:
+            - uid: fez0aemg3nif4f
+              title: lab-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device="//at-storage.stanford.edu/lab", fstype="cifs"})    /     max(node_filesystem_size_bytes{device="//at-storage.stanford.edu/lab", fstype="cifs"})  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: dezkbs6j08poge
+              title: stor02-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: |
+                        (  1 - (    max(node_filesystem_avail_bytes{device="//at-storage2.stanford.edu/stor02", fstype="cifs"})    /     max(node_filesystem_size_bytes{device="//at-storage2.stanford.edu/stor02", fstype="cifs"})  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: fezkbx2pwwmwwe
+              title: stor01-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device="//at-storage2.stanford.edu/stor01", fstype="cifs"})    /     max(node_filesystem_size_bytes{device="//at-storage2.stanford.edu/stor01", fstype="cifs"})  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: dezkc7ateqoe8f
+              title: B1-M-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: |
+                        (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageB1.stanford.edu/M", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageB1.stanford.edu/M", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: dezkcbvsltds0b
+              title: B2-M-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: |
+                        (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageB2.stanford.edu/M", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageB2.stanford.edu/M", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: fezkcemo74cn4a
+              title: B3-M-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: |
+                        (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageB3.stanford.edu/M", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageB3.stanford.edu/M", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: dezkci14twum8c
+              title: B1-I-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: |
+                        (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageB1.stanford.edu/I", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageB1.stanford.edu/I", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: fezkckrmyrif4a
+              title: B2-I-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageB2.stanford.edu/I", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageB2.stanford.edu/I", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: cezkcnbkwpt6od
+              title: B3-I-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageB3.stanford.edu/I", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageB3.stanford.edu/I", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: cezkd1enkobgge
+              title: enigma-videos-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storage9.stanford.edu/enigma-videos", fstype="cifs"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storage9.stanford.edu/enigma-videos", fstype="cifs"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: bezkdcenmob28f
+              title: devenv-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device=~"at-storage8.stanford.edu:/media/DevenvData/UserData"}) by (device)    /     max(node_filesystem_size_bytes{device=~"at-storage8.stanford.edu:/media/DevenvData/UserData"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: fezkdnyxtzta8b
+              title: AnData-drive
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (  1 - (    max(node_filesystem_avail_bytes{device=~"//at-storageEA1.stanford.edu/AnData"}) by (device)    /     max(node_filesystem_size_bytes{device=~"//at-storageEA1.stanford.edu/AnData"}) by (device)  )) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+            - uid: beznoh42q3ocgb
+              title: directpv-volumes
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: (directpv_stats_bytes_used / directpv_stats_bytes_total) * 100
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 85
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
+        - orgId: 1
+          name: 1m-eval
+          folder: Test
+          interval: 1m
+          rules:
+            - uid: beznpuerp1wjkb
+              title: ephemeral-node-storage
+              condition: C
+              data:
+                - refId: A
+                  relativeTimeRange:
+                    from: 600
+                    to: 0
+                  datasourceUid: prometheus
+                  model:
+                    editorMode: code
+                    expr: "(1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/md0\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info) \n/ \n(node_filesystem_size_bytes{mountpoint=\"/mnt/md0\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info)) * 100"
+                    instant: true
+                    intervalMs: 1000
+                    legendFormat: __auto
+                    maxDataPoints: 43200
+                    range: false
+                    refId: A
+                - refId: C
+                  datasourceUid: __expr__
+                  model:
+                    conditions:
+                        - evaluator:
+                            params:
+                                - 95
+                            type: gt
+                          operator:
+                            type: and
+                          query:
+                            params:
+                                - C
+                          reducer:
+                            params: []
+                            type: last
+                          type: query
+                    datasource:
+                        type: __expr__
+                        uid: __expr__
+                    expression: A
+                    intervalMs: 1000
+                    maxDataPoints: 43200
+                    refId: C
+                    type: threshold
+              noDataState: NoData
+              execErrState: Error
+              annotations:
+                summary: Tracks ephemeral node storage (/mnt/md0) across all nodes. See alert/dashboard for offending node.
+              isPaused: false
+              notification_settings:
+                receiver: enigma-slack-k8s-alerts
