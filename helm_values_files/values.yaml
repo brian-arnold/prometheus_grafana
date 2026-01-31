@@ -1,4 +1,22 @@
 prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      nginx.ingress.kubernetes.io/auth-url: "https://gate.enigmatic.stanford.edu/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "https://gate.enigmatic.stanford.edu/oauth2/start?rd=$scheme://$host$escaped_request_uri"
+    hosts:
+      - prometheus.enigmatic.stanford.edu
+    paths:
+      - /
+    pathType: Prefix
+    tls:
+      - secretName: prometheus-tls
+        hosts:
+          - prometheus.enigmatic.stanford.edu
   prometheusSpec:
     nodeSelector:
       kubernetes.io/hostname: at-compute010
@@ -17,30 +35,6 @@ prometheus:
       # for MinIO, put scrape config in a secret b/c it requires a token
       name: additional-scrape-configs-dpv-minio
       key: prometheus-dpv-minio.yaml
-
-    # this worked
-    # additionalScrapeConfigs:
-    #   - job_name: 'directpv-metrics'
-    #     scheme: http  # Confirmed HTTP works
-    #     metrics_path: /directpv/metrics
-    #     kubernetes_sd_configs:
-    #     - role: pod
-    #       namespaces:
-    #         names:
-    #         - directpv
-    #     relabel_configs:
-    #     # Keep only node-server pods (they have the metrics port)
-    #     - source_labels: [__meta_kubernetes_pod_name]
-    #       regex: "node-server-.*"
-    #       action: keep
-    #     # Set the correct port (10443)
-    #     - source_labels: [__address__]
-    #       regex: '([^:]+)(?::\d+)?'
-    #       target_label: __address__
-    #       replacement: '${1}:10443'
-    #     # Add node name as label
-    #     - source_labels: [__meta_kubernetes_pod_node_name]
-    #       target_label: node
 
   # add additional serive monitor to allow prometheus to scrape metrics from nvidia-dcgm-exporter
   additionalServiceMonitors:
@@ -67,6 +61,21 @@ prometheus-node-exporter:
     - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
 
 grafana:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      cert-manager.io/cluster-issuer: "letsencrypt"
+    hosts:
+      - grafana.enigmatic.stanford.edu
+    path: /
+    pathType: Prefix
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.enigmatic.stanford.edu
   sidecar:
     dashboards:
       annotations:

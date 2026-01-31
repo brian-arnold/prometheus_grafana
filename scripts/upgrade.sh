@@ -2,6 +2,6 @@
 helm upgrade \
 prometheus \
 prometheus-community/kube-prometheus-stack \
--f ../values.yaml \
+-f ../helm_values_files/values.yaml \
 --namespace monitoring \
 --version 77.11.0

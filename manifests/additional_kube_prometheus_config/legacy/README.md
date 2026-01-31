@@ -1,0 +1,1 @@
+Contains manifests for posterity, e.g. ingress manifests I created separately, outside of the helm chart.
