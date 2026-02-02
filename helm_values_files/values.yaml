@@ -107,3 +107,26 @@ grafana:
     auth.anonymous:
       enabled: false
       org_role: Viewer
+
+alertmanager:
+  config:
+    route:
+      group_by: ['alertname'] # default is ['namespace']
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      cert-manager.io/cluster-issuer: "letsencrypt"
+      nginx.ingress.kubernetes.io/auth-url: "https://gate.enigmatic.stanford.edu/oauth2/auth"
+      nginx.ingress.kubernetes.io/auth-signin: "https://gate.enigmatic.stanford.edu/oauth2/start?rd=$scheme://$host$escaped_request_uri"
+    hosts:
+      - alertmanager.enigmatic.stanford.edu
+    paths:
+      - /
+    pathType: Prefix
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.enigmatic.stanford.edu
