@@ -1,7 +1,10 @@
-# Prometheus/Grafana Stack for Kubernetes Monitoring
+# `kube-prometheus-stack` for Kubernetes Monitoring
 
 ## Background
-This prometheus/grafana stack deployment is simple. Prometheus seems to require local storage, so here we deploy a single instance of prometheus and grafana on a specific node (at-compute010) and use subdirectories within /mnt/md0 for these apps to store their data. If these pods ever crash, we have them deploy to the same node so that they still have access to their data within node-specific /mnt/md0.
+
+The `kube-prometheus-stack` is deployed as a helm chart and is cenetered around Prometheus, which scapes metrics from node exporters, and Alertmanager, which handles alerts sent by Prometheus and routes them to a receiver such as Slack. This chart also deploys Grafana for dashboards, but support for Grafana within this stack is more limited as the stack deploys operators for Prometheus and Alertmanager, but not Grafana. We could deploy the Grafana operator separately, but this would be managed by a separate stack with a different development cycle. Thus, we try to extensively use Prometheus and Alertmanager and use Grafana only for dashboards (and not for alerts, which it technically supports but is more clunky).
+
+ NOTE: Prometheus seems to require local storage, so here we deploy a single instance of prometheus and grafana on a specific node (at-compute010) and use subdirectories within /mnt/md0 for these apps to store their data. If these pods ever crash, we have them deploy to the same node so that they still have access to their data within node-specific /mnt/md0.
 
 ## Installation
 - add prometheus helm repo and update
@@ -25,7 +28,7 @@ This prometheus/grafana stack deployment is simple. Prometheus seems to require 
 For detailed information on specific topics, see the documentation in the [docs](docs/) directory:
 
 - **[Additional Configuration](docs/additional-configuration.md)** - Configure monitoring for specific Kubernetes components (kube-controller-manager, kube-scheduler, kube-proxy, etcd, NVIDIA DCGM exporter)
-- **[Managing Alerts](docs/managing-alerts.md)** - Export/import alert rules, set up Slack notifications, and manage alert rules via ConfigMaps
-- **[Dashboards and Alerts Workflow](docs/dashboards-and-alerts-workflow.md)** - Step-by-step workflows for creating and managing dashboards and alert rules
-- **[Ingress Setup](docs/ingress-setup.md)** - Configure ingress to access Grafana dashboards externally
+- **[Managing Alerts](docs/managing-alerts.md)** - Create alert rules and set up Slack notifications
+- **[Dashboarding Workflow](docs/dashboards-and-alerts-workflow.md)** - Step-by-step workflow for creating and managing dashboards 
+- **[Ingress Setup](docs/ingress-setup.md)** - Configure ingress for external access to Prometheus, Alertmanager, and Grafana GUIs
 - **[Troubleshooting](docs/troubleshooting.md)** - Advanced topics including changing the admin password, subfolder configuration, and deleting default dashboards
