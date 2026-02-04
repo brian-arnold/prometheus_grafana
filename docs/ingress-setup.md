@@ -3,14 +3,4 @@
 Flow:
 Internet → nginx-ingress → prometheus-grafana service → Grafana pod
 
-- Apply the grafana ingress
-  - `kubectl apply -f grafana-ingress.yaml`
-
-- confirm running + configured properly
-  - `kubectl get ingress -A`
-
-- to remove
-  - `kubectl delete ingress grafana-ingress -n monitoring`
-
-- test it
-  - `curl -k -H "Host: grafana.atlab.stanford.edu" https://10.107.158.11/`
+While we could make these ingress resources separately and apply them outselves, we have since moved this information into the helm chart itself, which supports an ingress field for each of the apps: Prometheus, Alertmanager, Grafana. Please see the helm chart values file for more information.

@@ -1,48 +1,56 @@
-# Managing Alert Rules as Files
+# Alerts
 
-### Exporting/importing alert rules
+Flow: **PrometheusRule → Prometheus → Alertmanager → Slack**
 
-Although dashboards can be exported and imported via the GUI, Grafana GUI only allows export. Importing them is a little trickier and involves 
-  1. Exporting the rules in the Alerting -> Alert rules tab, click 'Export rules' in the 'Grafana-managed' section. Export as a YAML file
-  2. Put the contents of this YAML in a ConfigMap; see `alerts-test-configmap.yaml` in the alerts subdirectory for an example
-  3. You need to make sure the Grafana alerts sidecar is in the helm chart; this sidecar scans for ConfigMaps
-  4. Apply the configmap using `kubectl apply -f`
-  5. Confirm the YAML file specified in the ConfifMap now exists in the Grafana instance
-  ```
-  kubectl exec deployment/prometheus-grafana -n monitoring -c grafana -- ls -la /etc/grafana/provisioning/alerting/
-  ```
-  6. Reload the provisioned files using the Grafana Admin HTTP API. This step is MANDATORY. On your local machine:
-  ```
-  kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-  curl -X POST -u admin:<PASSWORD> http://localhost:3000/api/admin/provisioning/alerting/reload
-  ```
-  If you have issues with the password, see the note on Admin passwords in the main README.
-  7. The Alerts should be present both in the Dashboards section (see the 'Alert rules' tab in the Alerts folder) and the Alert rules section
+- **PrometheusRule** CRDs define the alert conditions (PromQL expressions). Prometheus automatically discovers these based on label selectors.
+- **Prometheus** evaluates the rules and fires alerts to Alertmanager when conditions are met. 
+- **Alertmanager** receives alerts and routes them based on its configuration, which is where you define Slack as a receiver. Alertmanager is automatically included and connected to prometheus within the kube-prometheus-stack.
 
 
-### Setting up Slack contact point
-- If the contact point still exists for the alert rules specified in the config map, no need to do anything. Or, you could create a new contact point in the Grafana GUI and replace the `receiver` field in the config maps for the alert rules with the new name of the contact point.
+## Creating alerts via PrometheusRule CRD
 
-#### UNDER CONSTRUCTION (THERE MAY BE BETTER WAYS TO STORE SLACK TOKENS AS SECRETS)
-- However, you can also specify Slack contact points as config maps. See 'Configuring contact points' below for more info about configuring with Slack.
-- To specify Slack contact point as config map: 
-  1. Export contacts in Grafana GUI as YAML, put into config map, e.g. `contact-points.yaml` in this repo.
-  1. Remove the slack bot token from configmap file, replace with $SLACK_BOT_TOKEN, and store it as a secret using `kubectl create secret generic slack-bot-token -n monitoring --from-literal=token='xoxb-TOKENTOKENTOKEN'`
+Here is a simple example of an alert for overheating GPUs:
 
-### Deleting alert rules that have been provisioned as files via ConfigMaps
-
-Deleting provisioned Alert rules is extremely [tedious](https://github.com/grafana/grafana/issues/67036):
-  1. First, you need to delete the ConfigMaps that define the alert rules you want to delete
-  2. As described [here](https://grafana.com/docs/grafana/latest/developers/http_api/alerting_provisioning/), deleting alert rules needs to be done by UID
-  3. First get the UIDs, the following exports information that includes the UIDs in a JSON format
 ```
-kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-curl -u admin:<PASSWORD> http://localhost:3000/api/v1/provisioning/alert-rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gpu-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus  
+spec:
+  groups:
+    - name: gpu.rules
+      rules:
+        - alert: GPUHighTemp
+          expr: DCGM_FI_DEV_GPU_TEMP >= 92
+          for: 1m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "Node {{ $labels.Hostname }} has high GPU temp"
+            description: "GPU {{ $labels.gpu }} on {{ $labels.Hostname }} has temp {{ $value }}C"
 ```
-  4. Then create a ConfigMap specifying `deleteRules`, see an example in `alerts-test-delete-configmap.yaml`
-  5. Apply the ConfigMap, reload using the Admin HTTP API as described above, and then delete the ConfigMap
 
+- `metadata.labels` needs to be `release: prometheus` in order for prometheus to detect it.
 
-## Configuring contact points
-- For Slack integration, see (here)[https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/configure-slack/]
-  - After their step 2, in the OAuth & Permissions section, make sure to 'Install to Enigma'
+- `spec.groups.name.rules.alert.labels` dictate which slack channel the alert gets routed to (see below). A severity of critical gets sent to the `critical` channel, warning to the `warning` channel. Another label of `team: enigma` is also used to distinguish rules we want to get sent to slack from those that may have come provisioned with the kube-prometheus stack, or other rules we may want to still see in the prometheus/alertmanager GUI but not in slack.
+
+# Alertmanager
+
+To configure AlertManager for slack integration, there is a config section in the Helm chart that details which alerts get sent to which slack channels, and a bot token is needed. This config section is too long to put here, but see an example within this repo (TODO: SPECIFY THIS LOCATION WHEN FINALIZED).
+
+## How to get a slack token.
+
+Following [this tutorial](https://docs.slack.dev/tools/python-slack-sdk/tutorial/uploading-files/), 
+1. Create a Slack app and install it in the workspace.
+2. Go to "OAuth & Permissions" section, scroll down to Scopes -> Bot Token Scopes, and add the `chat:write` OAuth Scope from the drop down menu.
+3. Go to "Install App" section, and install the app to the work space.
+4. After this you should see a new OAuth Token. Copy this and save it.
+5. Create a channel in slack
+6. Once created, go to the message bar and type @AlertManager, or whatever name you chose for your bot, press enter, and then press the invite button to invite the bot to the channel.
+
+This bot token can be used for multiple slack channels. Just put it in the appropriate place in the config section of the helm chart.
+
