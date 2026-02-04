@@ -1,3 +1,6 @@
+#------------------------------------------------------
+# Prometheus
+#------------------------------------------------------
 prometheus:
   ingress:
     enabled: true
@@ -60,6 +63,9 @@ prometheus-node-exporter:
     - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+|mnt/lbm[0-9]+)($|/)
     - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
 
+#------------------------------------------------------
+# Grafana
+#------------------------------------------------------
 grafana:
   ingress:
     enabled: true
@@ -108,10 +114,14 @@ grafana:
       enabled: false
       org_role: Viewer
 
+#------------------------------------------------------
+# Alertmanager
+#------------------------------------------------------
 alertmanager:
-  config:
-    route:
-      group_by: ['alertname'] # default is ['namespace']
+  # instead of a config section, specify the config within a secret since it contains a slack token
+  alertmanagerSpec:
+    useExistingSecret: true
+    configSecret: alertmanager-config
   ingress:
     enabled: true
     ingressClassName: nginx
