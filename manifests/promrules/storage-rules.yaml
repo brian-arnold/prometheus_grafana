@@ -1,0 +1,275 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: storage-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus  # This label is key for discovery
+spec:
+  groups:
+    - name: storage.ephemeral.rules
+      rules:
+        - alert: EphemeralStorageLowSpace
+          expr: |
+            (
+              1 - (
+                node_filesystem_avail_bytes{mountpoint="/mnt/md0"}
+                /
+                node_filesystem_size_bytes{mountpoint="/mnt/md0"}
+              )
+            ) * 100
+            * on(instance) group_left(nodename) node_uname_info
+            > 90
+          for: 1m
+          labels:
+            severity: warning
+            team: enigma
+          annotations:
+            summary: "Ephemeral storage low on {{ $labels.nodename }}"
+            description: "Ephemeral storage on {{ $labels.nodename }} is at {{ $value | printf \"%.1f\" }}%"
+        - alert: EphemeralStorageNoSpace
+          expr: |
+            (
+              1 - (
+                node_filesystem_avail_bytes{mountpoint="/mnt/md0"}
+                /
+                node_filesystem_size_bytes{mountpoint="/mnt/md0"}
+              )
+            ) * 100
+            * on(instance) group_left(nodename) node_uname_info
+            > 99
+          for: 1m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "Ephemeral storage no space on {{ $labels.nodename }}"
+            description: "Ephemeral storage on {{ $labels.nodename }} is at {{ $value | printf \"%.1f\" }}%"
+
+    - name: storage.nas.rules
+      rules:
+        - alert: LabStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storage.stanford.edu/lab", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storage.stanford.edu/lab", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storage.stanford.edu/lab"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: Stor02StorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storage2.stanford.edu/stor02", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storage2.stanford.edu/stor02", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storage2.stanford.edu/stor02"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: Stor01StorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storage2.stanford.edu/stor01", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storage2.stanford.edu/stor01", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storage2.stanford.edu/stor01"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: B1MStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageB1.stanford.edu/M", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageB1.stanford.edu/M", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageB1.stanford.edu/M"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: B2MStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageB2.stanford.edu/M", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageB2.stanford.edu/M", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageB2.stanford.edu/M"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: B3MStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageB3.stanford.edu/M", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageB3.stanford.edu/M", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageB3.stanford.edu/M"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: B1IStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageB1.stanford.edu/I", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageB1.stanford.edu/I", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageB1.stanford.edu/I"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: B2IStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageB2.stanford.edu/I", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageB2.stanford.edu/I", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageB2.stanford.edu/I"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: B3IStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageB3.stanford.edu/I", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageB3.stanford.edu/I", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageB3.stanford.edu/I"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: EnigmaVideosStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storage9.stanford.edu/enigma-videos", fstype="cifs"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storage9.stanford.edu/enigma-videos", fstype="cifs"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storage9.stanford.edu/enigma-videos"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: DevenvStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="at-storage8.stanford.edu:/media/DevenvData/UserData"})
+                /
+                max(node_filesystem_size_bytes{device="at-storage8.stanford.edu:/media/DevenvData/UserData"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: at-storage8.stanford.edu:/media/DevenvData/UserData"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: AnDataStorageLowSpace
+          expr: |
+            (
+              1 - (
+                max(node_filesystem_avail_bytes{device="//at-storageEA1.stanford.edu/AnData"})
+                /
+                max(node_filesystem_size_bytes{device="//at-storageEA1.stanford.edu/AnData"})
+              )
+            ) * 100 
+            > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "NAS low on space: //at-storageEA1.stanford.edu/AnData"
+            description: "Current usage: {{ $value | printf \"%.1f\" }}%"
+
+        - alert: DirectPVVolumeLowSpace
+          expr: (directpv_stats_bytes_used / directpv_stats_bytes_total) * 100 > 85
+          for: 60m
+          labels:
+            severity: critical
+            team: enigma
+          annotations:
+            summary: "DirectPV volume low on space: {{ $labels.drive }}"
+            description: "Volume {{ $labels.volume }} on {{ $labels.node }} at {{ $value | printf \"%.1f\" }}%"
