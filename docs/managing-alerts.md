@@ -58,3 +58,4 @@ Following [this tutorial](https://docs.slack.dev/tools/python-slack-sdk/tutorial
 
 This bot token can be used for multiple slack channels. Just put it in the appropriate place in the config section of the helm chart.
 
+To change the token in the case it gets compromised, go to `api.slack.com/apps`. Click on the app, go to "OAuth and Permissions", scroll down to the bottom and click "Revoke Tokens". Then resintall the app to the workspace, on the same page. Reinvite the bot to the slack channelsdocs/managing-alerts.md.
