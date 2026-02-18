@@ -84,59 +84,56 @@ Implementing the steps in the tutorial above:
   - Instead I put the following in a file named `dpv-minio-scrape-config-w-token.yaml`, which is the output from the command above
   ```
   # scrape configs for MinIO
-  - job_name: minio-job
-    bearer_token: <TOKEN-OMITTED> 
-    metrics_path: /minio/v2/metrics/cluster
-    scheme: https
-    # I added tls config skip verify
-    tls_config:
-      insecure_skip_verify: true
-    static_configs:
-    - targets: ['minio.minio-tenant.svc.cluster.local:443']
+# scrape configs for MinIO
+- job_name: minio-job
+  bearer_token: <OMITTED> 
+  metrics_path: /minio/v2/metrics/cluster
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  static_configs:
+  - targets: ['minio.minio-tenant.svc.cluster.local:443']
 
-  # scrape configs for directpv
-  - job_name: 'directpv-metrics'
-    scheme: http
-    metrics_path: /directpv/metrics
-    authorization:
-      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+# scrape configs for directpv
+- job_name: 'directpv-metrics'
+  scheme: http
+  metrics_path: /directpv/metrics
+  authorization:
+    credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  kubernetes_sd_configs:
+  - role: pod
+  relabel_configs:
+  - source_labels: [__meta_kubernetes_namespace]
+    regex: "directpv"
+    action: keep
+  - source_labels: [__meta_kubernetes_pod_controller_kind]
+    regex: "DaemonSet"
+    action: keep
+  - source_labels: [__meta_kubernetes_pod_container_port_name]
+    regex: "metrics"
+    action: keep
 
-    kubernetes_sd_configs:
-    - role: pod
+- job_name: 'kubernetes-cadvisor'
+  scheme: https
+  metrics_path: /metrics/cadvisor
+  tls_config:
+    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    insecure_skip_verify: true
+  authorization:
+    credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
-    relabel_configs:
-    - source_labels: [__meta_kubernetes_namespace]
-      regex: "directpv"
-      action: keep
-    - source_labels: [__meta_kubernetes_pod_controller_kind]
-      regex: "DaemonSet"
-      action: keep
-    - source_labels: [__meta_kubernetes_pod_container_port_name]
-      regex: "healthz"
-      action: drop
-      target_label: kubernetes_port_name
+  kubernetes_sd_configs:
+  - role: node
 
-  - job_name: 'kubernetes-cadvisor'
-    scheme: https
-    metrics_path: /metrics/cadvisor
-    tls_config:
-      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-      insecure_skip_verify: true
-    authorization:
-      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
-    kubernetes_sd_configs:
-    - role: node
-
-    relabel_configs:
-    - action: labelmap
-      regex: __meta_kubernetes_node_label_(.+)
-    - source_labels: [__meta_kubernetes_namespace]
-      action: replace
-      target_label: kubernetes_namespace
-    - source_labels: [__meta_kubernetes_service_name]
-      action: replace
-      target_label: kubernetes_name    
+  relabel_configs:
+  - action: labelmap
+    regex: __meta_kubernetes_node_label_(.+)
+  - source_labels: [__meta_kubernetes_namespace]
+    action: replace
+    target_label: kubernetes_namespace
+  - source_labels: [__meta_kubernetes_service_name]
+    action: replace
+    target_label: kubernetes_name 
   ```
   - Save this in a file called `dpv-minio-scrape-config-w-token.yaml` to store in a secret
   ```

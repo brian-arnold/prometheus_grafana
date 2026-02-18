@@ -6,7 +6,6 @@ Flow: **PrometheusRule → Prometheus → Alertmanager → Slack**
 - **Prometheus** evaluates the rules and fires alerts to Alertmanager when conditions are met. 
 - **Alertmanager** receives alerts and routes them based on its configuration, which is where you define Slack as a receiver. Alertmanager is automatically included and connected to prometheus within the kube-prometheus-stack.
 
-
 ## Creating alerts via PrometheusRule CRD
 
 Here is a simple example of an alert for overheating GPUs:
@@ -36,7 +35,12 @@ spec:
 
 - `metadata.labels` needs to be `release: prometheus` in order for prometheus to detect it.
 
-- `spec.groups.name.rules.alert.labels` dictate which slack channel the alert gets routed to (see below). A severity of critical gets sent to the `critical` channel, warning to the `warning` channel. Another label of `team: enigma` is also used to distinguish rules we want to get sent to slack from those that may have come provisioned with the kube-prometheus stack, or other rules we may want to still see in the prometheus/alertmanager GUI but not in slack.
+- `spec.groups.name.rules.alert.labels` dictate which slack channel the alert gets routed to (see below). A severity of critical gets sent to the `critical` channel, warning to the `warning` channel, and info goes to the info channel. Some rules are given a severity of `none` so that they aren't sent to Slack.
+
+## Alerts from existing sources
+
+- The `kube-prometheus-stack` has many useful alerting rules
+- The website [Awesome Prometheus Alerts](https://samber.github.io/awesome-prometheus-alerts/) also has many useful rules
 
 # Alertmanager
 
