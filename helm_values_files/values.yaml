@@ -140,3 +140,10 @@ alertmanager:
       - secretName: alertmanager-tls
         hosts:
           - alertmanager.enigmatic.stanford.edu
+
+# turn off selected default rules, but apply custom versions by setting severity labels of some alerts to 'none'
+defaultRules:
+  create: true
+  rules:
+    kubernetesApps: false
+    nodeExporterAlerting: false
