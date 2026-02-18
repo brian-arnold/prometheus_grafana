@@ -14,7 +14,6 @@ spec:
           for: 1m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "Node {{ $labels.Hostname }} has high GPU core temp"
             description: "GPU {{ $labels.gpu }} on {{ $labels.Hostname }} has temp {{ $value }}C"
@@ -24,17 +23,15 @@ spec:
           for: 1m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "Node {{ $labels.Hostname }} has high GPU junction temp"
             description: "GPU {{ $labels.gpu }} on {{ $labels.Hostname }} has temp {{ $value }}C"
 
         - alert: GPUUnhealthy
-          expr: DCGM_FI_DEV_XID_ERRORS > 0
-          for: 5m
+          expr: changes(DCGM_FI_DEV_XID_ERRORS[5m]) > 0
+          for: 1m
           labels:
             severity: warning
-            team: enigma
           annotations:
             summary: "Node {{ $labels.Hostname }} has GPU XID errors"
             description: |
@@ -42,6 +39,7 @@ spec:
               Container `{{ $labels.exported_container}}` in namespace `{{ $labels.exported_namespace }}` may be affected.
               See `https://docs.nvidia.com/deploy/xid-errors/analyzing-xid-catalog.html` for details.
               If container and namespace names are empty, nothing is using the GPU currently.
+              NOTE: XID error codes persist until nvidia-dcgm-exporter pod is restarted, even after GPU recovers. Restart the pod to clear the error state.
 
         - alert: GPUCountMismatch
           expr: |
@@ -51,7 +49,6 @@ spec:
           for: 5m
           labels:
             severity: warning
-            team: enigma
           annotations:
             summary: "GPU count mismatch on {{ $labels.Hostname }}"
             description: |
@@ -64,7 +61,6 @@ spec:
           for: 5m
           labels:
             severity: warning
-            team: enigma
           annotations:
             summary: "DCGM exporter {{ $labels.pod }} is down"
             description: |

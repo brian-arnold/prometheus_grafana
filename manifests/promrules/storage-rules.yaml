@@ -23,7 +23,6 @@ spec:
           for: 1m
           labels:
             severity: warning
-            team: enigma
           annotations:
             summary: "Ephemeral storage low on {{ $labels.nodename }}"
             description: "Ephemeral storage on {{ $labels.nodename }} is at {{ $value | printf \"%.1f\" }}%"
@@ -41,7 +40,6 @@ spec:
           for: 1m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "Ephemeral storage no space on {{ $labels.nodename }}"
             description: "Ephemeral storage on {{ $labels.nodename }} is at {{ $value | printf \"%.1f\" }}%"
@@ -61,7 +59,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storage.stanford.edu/lab"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -79,7 +76,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storage2.stanford.edu/stor02"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -97,7 +93,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storage2.stanford.edu/stor01"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -115,7 +110,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageB1.stanford.edu/M"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -133,7 +127,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageB2.stanford.edu/M"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -151,7 +144,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageB3.stanford.edu/M"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -169,7 +161,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageB1.stanford.edu/I"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -187,7 +178,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageB2.stanford.edu/I"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -205,7 +195,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageB3.stanford.edu/I"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -223,7 +212,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storage9.stanford.edu/enigma-videos"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -241,7 +229,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: at-storage8.stanford.edu:/media/DevenvData/UserData"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -259,7 +246,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "NAS low on space: //at-storageEA1.stanford.edu/AnData"
             description: "Current usage: {{ $value | printf \"%.1f\" }}%"
@@ -269,7 +255,6 @@ spec:
           for: 60m
           labels:
             severity: critical
-            team: enigma
           annotations:
             summary: "DirectPV volume low on space: {{ $labels.drive }}"
             description: "Volume {{ $labels.volume }} on {{ $labels.node }} at {{ $value | printf \"%.1f\" }}%"

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-vault-csi
+  namespace: monitoring
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      volumeMounts:
+        - name: vault-secrets
+          mountPath: /mnt/secrets
+          readOnly: true
+  volumes:
+    - name: vault-secrets
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: vault-database
