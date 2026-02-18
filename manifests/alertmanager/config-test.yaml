@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+stringData:
+  alertmanager.yaml: |
+    route:
+      # default receiver: drop unmatched alerts (based on labels)
+      receiver: 'null' 
+
+      # How to group alerts together into a single notification.
+      group_by: ['alertname']
+
+      # group_wait: How long to wait after the first alert in a group arrives 
+      # before sending a notification. This lets Alertmanager batch multiple alerts 
+      # that fire around the same time into one message.
+      group_wait: 30s
+
+      # group_interval: How long to wait before sending updates about new alerts 
+      # added to an existing group that already had a notification sent.
+      group_interval: 5m
+
+      # repeat_interval: How long to wait before re-sending a notification for an 
+      # alert that's still firing and hasn't changed.
+      repeat_interval: 3h 
+
+      # for non-null receivers, define rule labels to route to them
+      routes:
+        - receiver: 'slack-info-alerts'
+          match:
+            severity: info
+        - receiver: 'slack-warning-alerts'
+          match:
+            severity: warning
+        - receiver: 'slack-critical-alerts'
+          match:
+            severity: critical
+
+    # taken from default alertmanager config: inhibit rules when others already firing
+    # e.g. If a critical alert is firing, suppress any warning/info alerts with 
+    # the same namespace AND alertname. Rule labels should be set accordingly in 
+    # PrometheusRules, e.g. severity of 'critical', 'warning', 'info'.
+    inhibit_rules:
+      - source_matchers:
+          - 'severity = critical'
+        target_matchers:
+          - 'severity =~ warning|info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'severity = warning'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'alertname = InfoInhibitor'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+      - target_matchers:
+          - 'alertname = InfoInhibitor'
+
+    receivers:
+      - name: 'null'
+
+      - name: 'slack-info-alerts'
+        slack_configs:
+          - api_url: 'https://slack.com/api/chat.postMessage'
+            channel: '#alertmanager-info'
+            send_resolved: true
+            http_config:
+              authorization:
+                type: Bearer
+                credentials: 'OMITTED'
+            title: |-
+              [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+
+            # annotations and labels come from the Prometheus rules
+            text: >-
+              {{ range .Alerts -}}
+              *Alert:* {{ .Annotations.summary }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+
+              *Description:* {{ .Annotations.description }}
+
+              *Details:*
+                {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+                {{ end }}
+              {{ end }}
+
+      - name: 'slack-warning-alerts'
+        slack_configs:
+          - api_url: 'https://slack.com/api/chat.postMessage'
+            channel: '#alertmanager-warning'
+            send_resolved: true
+            http_config:
+              authorization:
+                type: Bearer
+                credentials: 'OMITTED'
+            title: |-
+              [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+
+            # annotations and labels come from the Prometheus rules
+            text: >-
+              {{ range .Alerts -}}
+              *Alert:* {{ .Annotations.summary }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+
+              *Description:* {{ .Annotations.description }}
+
+              *Details:*
+                {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+                {{ end }}
+              {{ end }}
+
+      - name: 'slack-critical-alerts'
+        slack_configs:
+          - api_url: 'https://slack.com/api/chat.postMessage'
+            channel: '#alertmanager-critical'
+            send_resolved: true
+            http_config:
+              authorization:
+                type: Bearer
+                credentials: 'OMITTED'
+            title: |-
+              [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+
+            # annotations and labels come from the Prometheus rules
+            text: >-
+              {{ range .Alerts -}}
+              *Alert:* {{ .Annotations.summary }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+
+              *Description:* {{ .Annotations.description }}
+
+              *Details:*
+                {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+                {{ end }}
+              {{ end }}
