@@ -1,1 +1,2 @@
+manifests/alertmanager/config-test-DO-NOT-COMMIT.yaml
 dpv-minio-scrape-config-w-token.yaml
