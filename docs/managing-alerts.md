@@ -44,7 +44,7 @@ spec:
 
 # Alertmanager
 
-To configure AlertManager for slack integration, there is a config section in the Helm chart that details which alerts get sent to which slack channels, and a bot token is needed. This config section is too long to put here, but see an example within this repo (TODO: SPECIFY THIS LOCATION WHEN FINALIZED).
+To configure AlertManager for slack integration, there is a config section in the Helm chart that details which alerts get sent to which slack channels, and a bot token is needed. This config section is too long to put here, but see a full example at [`manifests/alertmanager/config-test.yaml`](../manifests/alertmanager/config-test.yaml).
 
 For inspiration about new alerts, see this repository [awesome prometheus alerts](https://samber.github.io/awesome-prometheus-alerts/rules) of commonly used alerts
 
@@ -64,4 +64,4 @@ If you ever need to see this token again, visit `api.slack.com/apps`, click on t
 
 ### Changing slack token
 
-To change the token in the case it gets compromised, go to `api.slack.com/apps`. Click on the app, go to "OAuth and Permissions", scroll down to the bottom and click "Revoke Tokens". Then resintall the app to the workspace, on the same page. Reinvite the bot to the slack channelsdocs/managing-alerts.md.
+To change the token in the case it gets compromised, go to `api.slack.com/apps`. Click on the app, go to "OAuth and Permissions", scroll down to the bottom and click "Revoke Tokens". Then reinstall the app to the workspace, on the same page. Reinvite the bot to the slack channels.

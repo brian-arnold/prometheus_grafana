@@ -48,7 +48,10 @@ sudo vi /etc/kubernetes/manifests/etcd.yaml
 ```
 
 ### NVIDIA DCGM exporter
-Added service monitor in values file.
+
+Prometheus scrapes GPU metrics from the `nvidia-dcgm-exporter` (deployed by the GPU operator in the `gpu-operator` namespace) via an additional ServiceMonitor defined in `helm_values_files/values.yaml` under `prometheus.additionalServiceMonitors`. The ServiceMonitor selects services with the label `app: nvidia-dcgm-exporter` in the `gpu-operator` namespace and scrapes the `gpu-metrics` port every 15 seconds.
+
+No manual steps are required beyond having the GPU operator (and its DCGM exporter) already running in the cluster.
 
 ### Ray
 See [here](https://docs.ray.io/en/latest/cluster/kubernetes/k8s-ecosystem/prometheus-grafana.html#using-prometheus-and-grafana) for how to monitor Ray resources with prometheus and grafana.
