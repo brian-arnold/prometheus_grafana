@@ -1,0 +1,694 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: monitoring
+  name: storage-file-system 
+  labels:
+    app: storage-file-system
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Storage"
+data: 
+  dashboard1.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 602,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": true,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 3,
+          "panels": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": true,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 80
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 1
+              },
+              "id": 17,
+              "options": {
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "editorMode": "code",
+                  "expr": "1 - (node_filesystem_avail_bytes{fstype=~\"cifs|nfs4\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info{nodename=\"at-compute010\"}) \n/ \n(node_filesystem_size_bytes{fstype=~\"cifs|nfs4\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info{nodename=\"at-compute010\"})",
+                  "legendFormat": "{{device}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "Storage time series",
+              "transparent": true,
+              "type": "timeseries"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 0.8
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 57,
+                "w": 11,
+                "x": 0,
+                "y": 9
+              },
+              "id": 1,
+              "options": {
+                "displayMode": "lcd",
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "maxVizHeight": 300,
+                "minVizHeight": 43,
+                "minVizWidth": 8,
+                "namePlacement": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showUnfilled": true,
+                "sizing": "manual",
+                "text": {
+                  "titleSize": 15,
+                  "valueSize": 28
+                },
+                "valueMode": "color"
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                  },
+                  "editorMode": "code",
+                  "expr": "1 - (node_filesystem_avail_bytes{fstype=~\"cifs|nfs4\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info{nodename=\"at-compute010\"}) \n/ \n(node_filesystem_size_bytes{fstype=~\"cifs|nfs4\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info{nodename=\"at-compute010\"})",
+                  "legendFormat": "{{mountpoint}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "Proportion used",
+              "transformations": [
+                {
+                  "id": "labelsToFields",
+                  "options": {
+                    "keepLabels": [
+                      "mountpoint",
+                      "instance"
+                    ],
+                    "mode": "columns",
+                    "valueLabel": "mountpoint"
+                  }
+                },
+                {
+                  "id": "sortBy",
+                  "options": {
+                    "fields": {},
+                    "sort": [
+                      {
+                        "field": "instance"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "transparent": true,
+              "type": "bargauge"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "fixedColor": "light-blue",
+                    "mode": "fixed"
+                  },
+                  "fieldMinMax": false,
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 57,
+                "w": 11,
+                "x": 11,
+                "y": 9
+              },
+              "id": 2,
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "text": {
+                  "titleSize": 15,
+                  "valueSize": 28
+                },
+                "textMode": "value_and_name",
+                "wideLayout": true
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "editorMode": "code",
+                  "expr": "(node_filesystem_size_bytes{fstype=~\"cifs|nfs4\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info{nodename=\"at-compute010\"}) / 1024^4",
+                  "legendFormat": "{{mountpoint}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "Total size (TB)",
+              "transparent": true,
+              "type": "stat"
+            }
+          ],
+          "title": "Network drives",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 1
+          },
+          "id": 9,
+          "panels": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "continuous-GrYlRd"
+                  },
+                  "custom": {
+                    "axisBorderShow": true,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisGridShow": false,
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "axisSoftMax": 1,
+                    "axisSoftMin": 0,
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineStyle": {
+                      "fill": "solid"
+                    },
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 80
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 8,
+                "w": 22,
+                "x": 0,
+                "y": 166
+              },
+              "id": 10,
+              "options": {
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "editorMode": "code",
+                  "expr": "1 - (node_filesystem_avail_bytes{mountpoint=\"/mnt/md0\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info) \n/ \n(node_filesystem_size_bytes{mountpoint=\"/mnt/md0\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info)",
+                  "legendFormat": "{{nodename}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "/mnt/md0",
+              "transparent": true,
+              "type": "timeseries"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "fixedColor": "light-blue",
+                    "mode": "fixed"
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 80
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 9,
+                "w": 22,
+                "x": 0,
+                "y": 174
+              },
+              "id": 11,
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "text": {
+                  "titleSize": 10,
+                  "valueSize": 30
+                },
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "editorMode": "code",
+                  "expr": "(node_filesystem_size_bytes{mountpoint=\"/mnt/md0\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info) / 1024^3",
+                  "legendFormat": "{{nodename}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "Total size (GB)",
+              "transparent": true,
+              "type": "stat"
+            }
+          ],
+          "title": "Direct-attached storage",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 2
+          },
+          "id": 12,
+          "panels": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "continuous-GrYlRd"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisGridShow": false,
+                    "axisLabel": "",
+                    "axisPlacement": "left",
+                    "axisSoftMax": 1,
+                    "axisSoftMin": 0,
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  },
+                  "mappings": [],
+                  "max": 1,
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      },
+                      {
+                        "color": "red",
+                        "value": 80
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 9,
+                "w": 24,
+                "x": 0,
+                "y": 591
+              },
+              "id": 13,
+              "options": {
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "editorMode": "code",
+                  "expr": "1 - (node_filesystem_avail_bytes{mountpoint=\"/\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info) \n/ \n(node_filesystem_size_bytes{mountpoint=\"/\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info)",
+                  "legendFormat": "{{nodename}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "Root \"/\"",
+              "transparent": true,
+              "type": "timeseries"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "fixedColor": "light-blue",
+                    "mode": "fixed"
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": 0
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 600
+              },
+              "id": 14,
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "text": {
+                  "titleSize": 10,
+                  "valueSize": 30
+                },
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "pluginVersion": "12.1.1",
+              "targets": [
+                {
+                  "editorMode": "code",
+                  "expr": "(node_filesystem_size_bytes{mountpoint=\"/\"}\n* on(instance) \ngroup_left(nodename) \nnode_uname_info) / 1024^3",
+                  "legendFormat": "{{nodename}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "title": "Total size (GB)",
+              "transparent": true,
+              "type": "stat"
+            }
+          ],
+          "title": "Root file system",
+          "type": "row"
+        }
+      ],
+      "preload": false,
+      "schemaVersion": 41,
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "File Systems",
+      "uid": "dashboard-storage-file-system",
+      "version": 1
+    }
