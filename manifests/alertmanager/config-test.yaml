@@ -25,8 +25,15 @@ stringData:
       # alert that's still firing and hasn't changed.
       repeat_interval: 3h 
 
-      # for non-null receivers, define rule labels to route to them
+      # for non-null receivers, define rule labels to route to them.
+      # NOTE: routes are evaluated top-down and the first match wins (continue
+      # defaults to false), so the dedicated burst route MUST come before the
+      # generic severity routes — otherwise a burst alert (severity: warning)
+      # would be caught by slack-warning-alerts instead.
       routes:
+        - receiver: 'slack-it-alerts'
+          match:
+            alertname: BurstJobWhileReservationIdle
         - receiver: 'slack-info-alerts'
           match:
             severity: info
@@ -67,6 +74,36 @@ stringData:
 
     receivers:
       - name: 'null'
+
+      # Dedicated channel for the "move burst jobs onto idle reservation capacity"
+      # nudge. Uses <!channel> so everyone in #it-alerts is pinged.
+      # UNLIKE the other receivers, this posts to the metamorphic-labs workspace
+      # (not enigma-brain, where the alertmanager bot lives), so it uses a
+      # metamorphic-labs Incoming Webhook instead of the chat.postMessage bot
+      # token. The api_url below is a metamorphic-labs Incoming Webhook URL — a
+      # secret that lives only in the live alertmanager-config secret. The
+      # committed placeholder is filled in at apply time (see repo README).
+      # NB: the webhook is bound to #it-alerts at creation time; the `channel`
+      # field below is cosmetic (Slack ignores it and posts to the bound channel).
+      - name: 'slack-it-alerts'
+        slack_configs:
+          - api_url: 'WEBHOOK_OMITTED'
+            channel: '#it-alerts'
+            send_resolved: true
+            title: |-
+              [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] Burst GPU job(s) can move onto idle reservation capacity
+
+            # <!channel> pings everyone in the channel. annotations/labels come from the PrometheusRule.
+            text: >-
+              <!channel> :money_with_wings: One or more *burst* GPU jobs are running while the
+              reservation fleets (DigitalOcean + Mithril) have idle capacity to host them.
+              Please move them off burst.
+
+              {{ range .Alerts -}}
+              *Job:* `{{ .Labels.run }}` — *user:* `{{ .Labels.user }}` — *fleet:* `{{ .Labels.fleet }}`
+
+              {{ .Annotations.description }}
+              {{ end }}
 
       - name: 'slack-info-alerts'
         slack_configs:

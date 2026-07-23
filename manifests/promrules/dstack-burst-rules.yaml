@@ -1,0 +1,45 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: dstack-burst-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus  # required for the kube-prometheus-stack operator to discover the rule
+spec:
+  groups:
+    - name: dstack.burst.rules
+      rules:
+        # Fire one alert per running burst job (a dstack job on any fleet that is
+        # NOT one of our paid-for reservation fleets: digital-ocean* or mithril*)
+        # WHILE the reservation pool has enough idle capacity to host it.
+        #
+        # Signal source is the dstack allocation exporter (ns dstack):
+        #   dstack_job_gpus         - GPUs the job holds (comparable across fleets)
+        #   dstack_instance_blocks_total/busy - reservation capacity, in blocks
+        #
+        # We gate each burst job by "free reservation blocks >= this job's GPUs".
+        # Most reservation blocks are 1 block = 1 GPU (digital-ocean-64/node-68 and
+        # the mithril fleets); the whole-node blocks (hot-swap/hot-spare) are 1
+        # block = 8 GPUs, so counting them as 1 makes the gate conservative (it
+        # under-states real headroom, never over-states it). The intent is a "you
+        # could move this off burst" nudge, not a scheduler.
+        - alert: BurstJobWhileReservationIdle
+          expr: |
+            (dstack_job_gpus{fleet!~"dig.*ocean.*|mithril.*"} > 0)
+              <= on() group_left()
+              (
+                sum(dstack_instance_blocks_total{fleet=~"dig.*ocean.*|mithril.*"})
+                - sum(dstack_instance_blocks_busy{fleet=~"dig.*ocean.*|mithril.*"})
+              )
+          for: 15m  # must persist so brief bursts / provisioning churn don't ping the channel
+          labels:
+            severity: warning
+          annotations:
+            summary: "Burst GPU job `{{ $labels.run }}` could move onto idle reservation capacity"
+            description: |
+              Job `{{ $labels.run }}` (user `{{ $labels.user }}`, {{ $value }} GPU(s)) is running on
+              the burst fleet `{{ $labels.fleet }}` on host `{{ $labels.host }}`, but the reservation
+              fleets (DigitalOcean + Mithril) currently have idle GPU capacity that can hold it.
+              We pay for the reservation fleets whether or not they are used, so please move this job
+              off burst and onto a reservation fleet.
+              Check current headroom on the dstack allocation dashboard (uid `dstack-fleet-alloc`) on at-grafana.
