@@ -7,7 +7,10 @@
 # GPU Reserved % comes from the dstack-exporter's dstack_instance_gpus_busy/total
 # (GPU-denominated — block size varies per fleet), excluding instances dstack marks
 # unreachable (dstack_instance_unreachable == 1: dead nodes aren't real capacity).
-# DO fleet regex dig.*ocean.* also matches the typo'd "digial-ocean-*" fleet names.
+# DO row covers the reserved fleet only: dstack queries pin fleet="digital-ocean-64"
+# (2026-07-29 consolidation; the typo'd digial-ocean-hot-spare-14 fleet is thereby
+# excluded) and node-level queries exclude the hot spare node .14 (mgmt
+# 10.44.164.76) — spare capacity/usage must not dilute fleet numbers.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -35,61 +38,61 @@ data:
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 }, { "color": "red", "value": 95 } ] } } },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdMarkers": true },
-          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",fleet=\"digital-ocean\"}[5m])))" } ] },
+          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}[5m])))" } ] },
 
         { "id": 2, "type": "gauge", "title": "Memory · current", "gridPos": { "h": 5, "w": 5, "x": 5, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 }, { "color": "red", "value": 95 } ] } } },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdMarkers": true },
-          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - sum(node_memory_MemAvailable_bytes{fleet=\"digital-ocean\"}) / sum(node_memory_MemTotal_bytes{fleet=\"digital-ocean\"}))" } ] },
+          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - sum(node_memory_MemAvailable_bytes{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}) / sum(node_memory_MemTotal_bytes{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}))" } ] },
 
         { "id": 3, "type": "gauge", "title": "GPU · current", "gridPos": { "h": 5, "w": 5, "x": 10, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 }, { "color": "red", "value": 95 } ] } } },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdMarkers": true },
-          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"})" } ] },
+          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"})" } ] },
 
         { "id": 4, "type": "gauge", "title": "GPU Memory · current", "gridPos": { "h": 5, "w": 5, "x": 15, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 }, { "color": "red", "value": 95 } ] } } },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdMarkers": true },
-          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\"}) / (sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\"}) + sum(DCGM_FI_DEV_FB_FREE{fleet=\"digital-ocean\"}))" } ] },
+          "targets": [ { "refId": "A", "instant": true, "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}) / (sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}) + sum(DCGM_FI_DEV_FB_FREE{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}))" } ] },
 
         { "id": 22, "type": "gauge", "title": "GPU Reserved % · current", "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 }, { "color": "red", "value": 95 } ] } } },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdMarkers": true },
-          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum((dstack_instance_gpus_busy{fleet=~\"dig.*ocean.*\"} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{fleet=~\"dig.*ocean.*\"} and on(instance) dstack_instance_unreachable == 0))", "instant": true } ] },
+          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum((dstack_instance_gpus_busy{fleet=\"digital-ocean-64\"} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{fleet=\"digital-ocean-64\"} and on(instance) dstack_instance_unreachable == 0))", "instant": true } ] },
 
         { "id": 5, "type": "stat", "title": "CPU · avg over range", "gridPos": { "h": 5, "w": 5, "x": 0, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 } ] } } },
           "options": { "reduceOptions": { "calcs": ["mean"] }, "colorMode": "value", "graphMode": "area" },
-          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",fleet=\"digital-ocean\"}[5m])))" } ] },
+          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}[5m])))" } ] },
 
         { "id": 6, "type": "stat", "title": "Memory · avg over range", "gridPos": { "h": 5, "w": 5, "x": 5, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 } ] } } },
           "options": { "reduceOptions": { "calcs": ["mean"] }, "colorMode": "value", "graphMode": "area" },
-          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - sum(node_memory_MemAvailable_bytes{fleet=\"digital-ocean\"}) / sum(node_memory_MemTotal_bytes{fleet=\"digital-ocean\"}))" } ] },
+          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * (1 - sum(node_memory_MemAvailable_bytes{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}) / sum(node_memory_MemTotal_bytes{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}))" } ] },
 
         { "id": 7, "type": "stat", "title": "GPU · avg over range", "gridPos": { "h": 5, "w": 5, "x": 10, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 } ] } } },
           "options": { "reduceOptions": { "calcs": ["mean"] }, "colorMode": "value", "graphMode": "area" },
-          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"})" } ] },
+          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"})" } ] },
 
         { "id": 8, "type": "stat", "title": "GPU Memory · avg over range", "gridPos": { "h": 5, "w": 5, "x": 15, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 } ] } } },
           "options": { "reduceOptions": { "calcs": ["mean"] }, "colorMode": "value", "graphMode": "area" },
-          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\"}) / (sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\"}) + sum(DCGM_FI_DEV_FB_FREE{fleet=\"digital-ocean\"}))" } ] },
+          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}) / (sum(DCGM_FI_DEV_FB_USED{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}) + sum(DCGM_FI_DEV_FB_FREE{fleet=\"digital-ocean\",instance!~\"10.44.164.76:.*\"}))" } ] },
 
         { "id": 26, "type": "stat", "title": "GPU Reserved % · avg over range", "gridPos": { "h": 5, "w": 4, "x": 20, "y": 6 },
           "datasource": { "type": "prometheus", "uid": "victoriametrics" },
           "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null }, { "color": "green", "value": 40 }, { "color": "orange", "value": 85 } ] } } },
           "options": { "reduceOptions": { "calcs": ["mean"] }, "colorMode": "value", "graphMode": "area" },
-          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum((dstack_instance_gpus_busy{fleet=~\"dig.*ocean.*\"} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{fleet=~\"dig.*ocean.*\"} and on(instance) dstack_instance_unreachable == 0))" } ] },
+          "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "victoriametrics" }, "expr": "100 * sum((dstack_instance_gpus_busy{fleet=\"digital-ocean-64\"} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{fleet=\"digital-ocean-64\"} and on(instance) dstack_instance_unreachable == 0))" } ] },
 
         { "id": 101, "type": "row", "title": "Mithril", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 } },
 
