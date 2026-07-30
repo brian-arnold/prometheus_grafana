@@ -1,0 +1,147 @@
+# Management-only Grafana instance (mgmt-grafana), separate from the shared
+# at-grafana so cost dashboards are NOT visible to the rest of the company.
+# - Reached ONLY via the Teleport app `mgmt-grafana` (registered on the
+#   at-kube-agent, OpenTofu repo teleport/agents/at-kube-agent.values.yaml);
+#   access is gated by the Teleport role `mgmt-grafana-access` (OpenTofu repo
+#   teleport/mgmt_grafana_role.tf) — plus the admin `access` preset (wildcard
+#   app_labels: brian/edgar/daniel). No ingress, no public edge.
+# - Anonymous Viewer inside (same pattern as at-grafana): Teleport is the auth
+#   layer. Login form disabled; there is no admin UI — dashboards and
+#   datasources are fully provisioned from this file (stateless, emptyDir).
+# - Reads the same VictoriaMetrics LTS datasource in ns monitoring (uid
+#   `victoriametrics`, matching the dashboard JSON refs).
+# To add a dashboard: append a file to the grafana-mgmt-dashboards ConfigMap
+# and `kubectl apply -f` this file; grafana reloads providers every 30s.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring-mgmt
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-mgmt-ini
+  namespace: monitoring-mgmt
+data:
+  grafana.ini: |
+    [server]
+    root_url = https://mgmt-grafana.metamorphic.teleport.sh
+    [auth]
+    disable_login_form = true
+    [auth.anonymous]
+    enabled = true
+    org_role = Viewer
+    [users]
+    allow_sign_up = false
+    [analytics]
+    reporting_enabled = false
+    check_for_updates = false
+    [news]
+    news_feed_enabled = false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-mgmt-provisioning
+  namespace: monitoring-mgmt
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: VictoriaMetrics
+        uid: victoriametrics
+        type: prometheus
+        access: proxy
+        url: http://victoria-metrics.monitoring.svc.cluster.local:8428
+        isDefault: true
+        editable: false
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: management
+        folder: Management
+        type: file
+        updateIntervalSeconds: 30
+        allowUiUpdates: false
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-mgmt
+  namespace: monitoring-mgmt
+  labels:
+    app: grafana-mgmt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-mgmt
+  template:
+    metadata:
+      labels:
+        app: grafana-mgmt
+    spec:
+      securityContext:
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:12.1.1
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+          volumeMounts:
+            - name: ini
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+              subPath: datasources.yaml
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
+              subPath: dashboards.yaml
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+            - name: storage
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: ini
+          configMap:
+            name: grafana-mgmt-ini
+        - name: provisioning
+          configMap:
+            name: grafana-mgmt-provisioning
+        - name: dashboards
+          configMap:
+            name: grafana-mgmt-dashboards
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-mgmt
+  namespace: monitoring-mgmt
+  labels:
+    app: grafana-mgmt
+spec:
+  selector:
+    app: grafana-mgmt
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
