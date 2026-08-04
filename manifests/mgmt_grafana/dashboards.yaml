@@ -1,7 +1,12 @@
 # Dashboards provisioned into mgmt-grafana (file provider, folder "Management").
 # Add dashboards by appending files to this ConfigMap; grafana reloads every 30s.
-# reserved-fleet-cost-do / -mithril: per-fleet cost dashboards (split per mgmt
-# request 2026-07-29; the combined reserved-fleet-cost was replaced by these).
+# reserved-fleet-cost-do: per-fleet cost dashboard (the combined reserved-fleet-cost
+# was split per mgmt request 2026-07-29). reserved-fleet-cost-mithril: removed
+# 2026-08-03 for the fleet decommission, RESTORED 2026-08-03 per mgmt request as
+# a historical dashboard — retitled "(decommissioned 2026-08-04)", default time
+# range fixed to the contract tail (2026-07-01 → 2026-08-04, auto-refresh off)
+# since live ranges show no data after decommission; the Mithril metric history
+# lives in VictoriaMetrics indefinitely.
 # Inputs per dashboard = TOTAL CONTRACT COST + CONTRACT LENGTH IN DAYS (textbox
 # vars contract_cost / contract_days; plain numbers — no $ or commas). PromQL
 # cannot parse typed dates, hence days rather than start/end fields; daily rate
@@ -13,7 +18,997 @@ metadata:
   name: grafana-mgmt-dashboards
   namespace: monitoring-mgmt
 data:
-  reserved-fleet-cost-do.json: "{\n  \"uid\": \"reserved-fleet-cost-do\",\n  \"title\": \"Reserved Fleet Cost \u2014 DigitalOcean\",\n  \"tags\": [\n    \"fleets\",\n    \"gpu\",\n    \"reserved\",\n    \"cost\",\n    \"management\"\n  ],\n  \"schemaVersion\": 39,\n  \"version\": 3,\n  \"refresh\": \"30s\",\n  \"time\": {\n    \"from\": \"now-7d\",\n    \"to\": \"now\"\n  },\n  \"templating\": {\n    \"list\": [\n      {\n        \"type\": \"textbox\",\n        \"name\": \"contract_cost\",\n        \"label\": \"DigitalOcean contract cost ($ total)\",\n        \"query\": \"0\",\n        \"current\": {\n          \"selected\": false,\n          \"text\": \"0\",\n          \"value\": \"0\"\n        },\n        \"options\": [\n          {\n            \"selected\": true,\n            \"text\": \"0\",\n            \"value\": \"0\"\n          }\n        ]\n      },\n      {\n        \"type\": \"textbox\",\n        \"name\": \"contract_days\",\n        \"label\": \"DigitalOcean contract length (days)\",\n        \"query\": \"1\",\n        \"current\": {\n          \"selected\": false,\n          \"text\": \"1\",\n          \"value\": \"1\"\n        },\n        \"options\": [\n          {\n            \"selected\": true,\n            \"text\": \"1\",\n            \"value\": \"1\"\n          }\n        ]\n      }\n    ]\n  },\n  \"panels\": [\n    {\n      \"id\": 100,\n      \"type\": \"row\",\n      \"title\": \"DigitalOcean \u2014 cost (over selected range)\",\n      \"gridPos\": {\n        \"h\": 1,\n        \"w\": 24,\n        \"x\": 0,\n        \"y\": 0\n      }\n    },\n    {\n      \"id\": 1,\n      \"type\": \"stat\",\n      \"title\": \"Contract cost\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 0,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"vector($contract_cost)\"\n        }\n      ],\n      \"description\": \"Enter the contract's total cost and its length in days (from its date range); all panels derive the daily rate as cost / days.\"\n    },\n    {\n      \"id\": 2,\n      \"type\": \"stat\",\n      \"title\": \"Daily rate (contract)\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 6,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"vector(($contract_cost / $contract_days))\"\n        }\n      ]\n    },\n    {\n      \"id\": 3,\n      \"type\": \"stat\",\n      \"title\": \"Spend over selected range\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 12,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"lastNotNull\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"vector(($contract_cost / $contract_days) * $__range_s / 86400)\"\n        }\n      ]\n    },\n    {\n      \"id\": 4,\n      \"type\": \"stat\",\n      \"title\": \"$ / GPU-hour (list)\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 18,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"($contract_cost / $contract_days) / 24 / count(DCGM_FI_DEV_GPU_UTIL{fleet=\\\"digital-ocean\\\"})\"\n        }\n      ]\n    },\n    {\n      \"id\": 5,\n      \"type\": \"stat\",\n      \"title\": \"Avg GPU utilization\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 0,\n        \"y\": 5\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"percent\",\n          \"decimals\": 2,\n          \"min\": 0,\n          \"max\": 100,\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"blue\",\n                \"value\": null\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 40\n              },\n              {\n                \"color\": \"orange\",\n                \"value\": 85\n              }\n            ]\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"area\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"avg(DCGM_FI_DEV_GPU_UTIL{fleet=\\\"digital-ocean\\\"})\"\n        }\n      ]\n    },\n    {\n      \"id\": 6,\n      \"type\": \"stat\",\n      \"title\": \"Utilized spend\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 8,\n        \"y\": 5\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"green\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"(($contract_cost / $contract_days) * $__range_s / 86400) * avg(DCGM_FI_DEV_GPU_UTIL{fleet=\\\"digital-ocean\\\"}) / 100\"\n        }\n      ],\n      \"description\": \"Spend weighted by fleet-average GPU utilization (NVML occupancy \u2014 upper bound on useful work).\"\n    },\n    {\n      \"id\": 7,\n      \"type\": \"stat\",\n      \"title\": \"Idle spend\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 16,\n        \"y\": 5\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"orange\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"(($contract_cost / $contract_days) * $__range_s / 86400) * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=\\\"digital-ocean\\\"})) / 100\"\n        }\n      ],\n      \"description\": \"Spend attributed to GPUs sitting idle over the selected range.\"\n    },\n    {\n      \"id\": 8,\n      \"type\": \"timeseries\",\n      \"title\"\
-    : \"Hourly burn \u2014 utilized vs idle ($/h)\",\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 24,\n        \"x\": 0,\n        \"y\": 9\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"min\": 0,\n          \"custom\": {\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 35,\n            \"showPoints\": \"never\",\n            \"stacking\": {\n              \"mode\": \"normal\",\n              \"group\": \"A\"\n            }\n          },\n          \"decimals\": 2\n        },\n        \"overrides\": [\n          {\n            \"matcher\": {\n              \"id\": \"byName\",\n              \"options\": \"utilized\"\n            },\n            \"properties\": [\n              {\n                \"id\": \"color\",\n                \"value\": {\n                  \"mode\": \"fixed\",\n                  \"fixedColor\": \"green\"\n                }\n              }\n            ]\n          },\n          {\n            \"matcher\": {\n              \"id\": \"byName\",\n              \"options\": \"idle\"\n            },\n            \"properties\": [\n              {\n                \"id\": \"color\",\n                \"value\": {\n                  \"mode\": \"fixed\",\n                  \"fixedColor\": \"orange\"\n                }\n              }\n            ]\n          }\n        ]\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"desc\"\n        }\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"($contract_cost / $contract_days) / 24 * avg(DCGM_FI_DEV_GPU_UTIL{fleet=\\\"digital-ocean\\\"}) / 100\",\n          \"legendFormat\": \"utilized\"\n        },\n        {\n          \"refId\": \"B\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"($contract_cost / $contract_days) / 24 * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=\\\"digital-ocean\\\"})) / 100\",\n          \"legendFormat\": \"idle\"\n        }\n      ]\n    }\n  ]\n}"
-  reserved-fleet-cost-mithril.json: "{\n  \"uid\": \"reserved-fleet-cost-mithril\",\n  \"title\": \"Reserved Fleet Cost \u2014 Mithril\",\n  \"tags\": [\n    \"fleets\",\n    \"gpu\",\n    \"reserved\",\n    \"cost\",\n    \"management\"\n  ],\n  \"schemaVersion\": 39,\n  \"version\": 3,\n  \"refresh\": \"30s\",\n  \"time\": {\n    \"from\": \"now-7d\",\n    \"to\": \"now\"\n  },\n  \"templating\": {\n    \"list\": [\n      {\n        \"type\": \"textbox\",\n        \"name\": \"contract_cost\",\n        \"label\": \"Mithril contract cost ($ total)\",\n        \"query\": \"0\",\n        \"current\": {\n          \"selected\": false,\n          \"text\": \"0\",\n          \"value\": \"0\"\n        },\n        \"options\": [\n          {\n            \"selected\": true,\n            \"text\": \"0\",\n            \"value\": \"0\"\n          }\n        ]\n      },\n      {\n        \"type\": \"textbox\",\n        \"name\": \"contract_days\",\n        \"label\": \"Mithril contract length (days)\",\n        \"query\": \"1\",\n        \"current\": {\n          \"selected\": false,\n          \"text\": \"1\",\n          \"value\": \"1\"\n        },\n        \"options\": [\n          {\n            \"selected\": true,\n            \"text\": \"1\",\n            \"value\": \"1\"\n          }\n        ]\n      }\n    ]\n  },\n  \"panels\": [\n    {\n      \"id\": 100,\n      \"type\": \"row\",\n      \"title\": \"Mithril \u2014 cost (over selected range)\",\n      \"gridPos\": {\n        \"h\": 1,\n        \"w\": 24,\n        \"x\": 0,\n        \"y\": 0\n      }\n    },\n    {\n      \"id\": 1,\n      \"type\": \"stat\",\n      \"title\": \"Contract cost\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 0,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"vector($contract_cost)\"\n        }\n      ],\n      \"description\": \"Enter the contract's total cost and its length in days (from its date range); all panels derive the daily rate as cost / days.\"\n    },\n    {\n      \"id\": 2,\n      \"type\": \"stat\",\n      \"title\": \"Daily rate (contract)\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 6,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"vector(($contract_cost / $contract_days))\"\n        }\n      ]\n    },\n    {\n      \"id\": 3,\n      \"type\": \"stat\",\n      \"title\": \"Spend over selected range\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 12,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"lastNotNull\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"vector(($contract_cost / $contract_days) * $__range_s / 86400)\"\n        }\n      ]\n    },\n    {\n      \"id\": 4,\n      \"type\": \"stat\",\n      \"title\": \"$ / GPU-hour (list)\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 6,\n        \"x\": 18,\n        \"y\": 1\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"blue\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"($contract_cost / $contract_days) / 24 / count(DCGM_FI_DEV_GPU_UTIL{fleet=~\\\"mithril.*\\\"})\"\n        }\n      ]\n    },\n    {\n      \"id\": 5,\n      \"type\": \"stat\",\n      \"title\": \"Avg GPU utilization\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 0,\n        \"y\": 5\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"percent\",\n          \"decimals\": 2,\n          \"min\": 0,\n          \"max\": 100,\n          \"color\": {\n            \"mode\": \"thresholds\"\n          },\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"blue\",\n                \"value\": null\n              },\n              {\n                \"color\": \"green\",\n                \"value\": 40\n              },\n              {\n                \"color\": \"orange\",\n                \"value\": 85\n              }\n            ]\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"area\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\\\"mithril.*\\\"})\"\n        }\n      ]\n    },\n    {\n      \"id\": 6,\n      \"type\": \"stat\",\n      \"title\": \"Utilized spend\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 8,\n        \"y\": 5\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"green\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"(($contract_cost / $contract_days) * $__range_s / 86400) * avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\\\"mithril.*\\\"}) / 100\"\n        }\n      ],\n      \"description\": \"Spend weighted by fleet-average GPU utilization (NVML occupancy \u2014 upper bound on useful work).\"\n    },\n    {\n      \"id\": 7,\n      \"type\": \"stat\",\n      \"title\": \"Idle spend\",\n      \"gridPos\": {\n        \"h\": 4,\n        \"w\": 8,\n        \"x\": 16,\n        \"y\": 5\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"decimals\": 2,\n          \"color\": {\n            \"mode\": \"fixed\",\n            \"fixedColor\": \"orange\"\n          }\n        }\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"colorMode\": \"value\",\n        \"graphMode\": \"none\"\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"(($contract_cost / $contract_days) * $__range_s / 86400) * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\\\"mithril.*\\\"})) / 100\"\n        }\n      ],\n      \"description\": \"Spend attributed to GPUs sitting idle over the selected range.\"\n    },\n    {\n      \"id\": 8,\n      \"type\": \"timeseries\",\n      \"title\": \"Hourly burn \u2014\
-    \ utilized vs idle ($/h)\",\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 24,\n        \"x\": 0,\n        \"y\": 9\n      },\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"victoriametrics\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"currencyUSD\",\n          \"min\": 0,\n          \"custom\": {\n            \"drawStyle\": \"line\",\n            \"fillOpacity\": 35,\n            \"showPoints\": \"never\",\n            \"stacking\": {\n              \"mode\": \"normal\",\n              \"group\": \"A\"\n            }\n          },\n          \"decimals\": 2\n        },\n        \"overrides\": [\n          {\n            \"matcher\": {\n              \"id\": \"byName\",\n              \"options\": \"utilized\"\n            },\n            \"properties\": [\n              {\n                \"id\": \"color\",\n                \"value\": {\n                  \"mode\": \"fixed\",\n                  \"fixedColor\": \"green\"\n                }\n              }\n            ]\n          },\n          {\n            \"matcher\": {\n              \"id\": \"byName\",\n              \"options\": \"idle\"\n            },\n            \"properties\": [\n              {\n                \"id\": \"color\",\n                \"value\": {\n                  \"mode\": \"fixed\",\n                  \"fixedColor\": \"orange\"\n                }\n              }\n            ]\n          }\n        ]\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\": \"table\",\n          \"placement\": \"bottom\",\n          \"calcs\": [\n            \"mean\"\n          ]\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"desc\"\n        }\n      },\n      \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"($contract_cost / $contract_days) / 24 * avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\\\"mithril.*\\\"}) / 100\",\n          \"legendFormat\": \"utilized\"\n        },\n        {\n          \"refId\": \"B\",\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"victoriametrics\"\n          },\n          \"expr\": \"($contract_cost / $contract_days) / 24 * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\\\"mithril.*\\\"})) / 100\",\n          \"legendFormat\": \"idle\"\n        }\n      ]\n    }\n  ]\n}"
+  reserved-fleet-cost-do.json: |
+    {
+      "uid": "reserved-fleet-cost-do",
+      "title": "Reserved Fleet Cost — DigitalOcean",
+      "tags": [
+        "fleets",
+        "gpu",
+        "reserved",
+        "cost",
+        "management"
+      ],
+      "schemaVersion": 39,
+      "version": 3,
+      "refresh": "30s",
+      "time": {
+        "from": "now-7d",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "type": "textbox",
+            "name": "contract_cost",
+            "label": "DigitalOcean contract cost ($ total)",
+            "query": "0",
+            "current": {
+              "selected": false,
+              "text": "0",
+              "value": "0"
+            },
+            "options": [
+              {
+                "selected": true,
+                "text": "0",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "type": "textbox",
+            "name": "contract_days",
+            "label": "DigitalOcean contract length (days)",
+            "query": "1",
+            "current": {
+              "selected": false,
+              "text": "1",
+              "value": "1"
+            },
+            "options": [
+              {
+                "selected": true,
+                "text": "1",
+                "value": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "DigitalOcean — cost (over selected range)",
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Contract cost",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "vector($contract_cost)"
+            }
+          ],
+          "description": "Enter the contract's total cost and its length in days (from its date range); all panels derive the daily rate as cost / days."
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Daily rate (contract)",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "vector(($contract_cost / $contract_days))"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Spend over selected range",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "vector(($contract_cost / $contract_days) * $__range_s / 86400)"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "$ / GPU-hour (list)",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "($contract_cost / $contract_days) / 24 / count(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"})"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Avg GPU utilization",
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "decimals": 2,
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 40
+                  },
+                  {
+                    "color": "orange",
+                    "value": 85
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"})"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Utilized spend",
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "green"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "(($contract_cost / $contract_days) * $__range_s / 86400) * avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"}) / 100"
+            }
+          ],
+          "description": "Spend weighted by fleet-average GPU utilization (NVML occupancy — upper bound on useful work)."
+        },
+        {
+          "id": 7,
+          "type": "stat",
+          "title": "Idle spend",
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "orange"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "(($contract_cost / $contract_days) * $__range_s / 86400) * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"})) / 100"
+            }
+          ],
+          "description": "Spend attributed to GPUs sitting idle over the selected range."
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Hourly burn — utilized vs idle ($/h)",
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "min": 0,
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 35,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "decimals": 2
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "utilized"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "green"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "idle"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "orange"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "($contract_cost / $contract_days) / 24 * avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"}) / 100",
+              "legendFormat": "utilized"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "($contract_cost / $contract_days) / 24 * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=\"digital-ocean\"})) / 100",
+              "legendFormat": "idle"
+            }
+          ]
+        }
+      ]
+    }
+  reserved-fleet-cost-mithril.json: |
+    {
+      "uid": "reserved-fleet-cost-mithril",
+      "title": "Reserved Fleet Cost — Mithril (decommissioned 2026-08-04)",
+      "tags": [
+        "fleets",
+        "gpu",
+        "reserved",
+        "cost",
+        "management"
+      ],
+      "schemaVersion": 39,
+      "version": 4,
+      "refresh": "",
+      "time": {
+        "from": "2026-07-01T00:00:00Z",
+        "to": "2026-08-04T00:00:00Z"
+      },
+      "templating": {
+        "list": [
+          {
+            "type": "textbox",
+            "name": "contract_cost",
+            "label": "Mithril contract cost ($ total)",
+            "query": "0",
+            "current": {
+              "selected": false,
+              "text": "0",
+              "value": "0"
+            },
+            "options": [
+              {
+                "selected": true,
+                "text": "0",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "type": "textbox",
+            "name": "contract_days",
+            "label": "Mithril contract length (days)",
+            "query": "1",
+            "current": {
+              "selected": false,
+              "text": "1",
+              "value": "1"
+            },
+            "options": [
+              {
+                "selected": true,
+                "text": "1",
+                "value": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Mithril — cost (over selected range)",
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Contract cost",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "vector($contract_cost)"
+            }
+          ],
+          "description": "Enter the contract's total cost and its length in days (from its date range); all panels derive the daily rate as cost / days."
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Daily rate (contract)",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "vector(($contract_cost / $contract_days))"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Spend over selected range",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "vector(($contract_cost / $contract_days) * $__range_s / 86400)"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "$ / GPU-hour (list)",
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "blue"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "($contract_cost / $contract_days) / 24 / count(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"})"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Avg GPU utilization",
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "decimals": 2,
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 40
+                  },
+                  {
+                    "color": "orange",
+                    "value": 85
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"})"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Utilized spend",
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "green"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "(($contract_cost / $contract_days) * $__range_s / 86400) * avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"}) / 100"
+            }
+          ],
+          "description": "Spend weighted by fleet-average GPU utilization (NVML occupancy — upper bound on useful work)."
+        },
+        {
+          "id": 7,
+          "type": "stat",
+          "title": "Idle spend",
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "decimals": 2,
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "orange"
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "none"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "(($contract_cost / $contract_days) * $__range_s / 86400) * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"})) / 100"
+            }
+          ],
+          "description": "Spend attributed to GPUs sitting idle over the selected range."
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Hourly burn — utilized vs idle ($/h)",
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "min": 0,
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 35,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "decimals": 2
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "utilized"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "green"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "idle"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "orange"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "($contract_cost / $contract_days) / 24 * avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"}) / 100",
+              "legendFormat": "utilized"
+            },
+            {
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "($contract_cost / $contract_days) / 24 * (100 - avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"})) / 100",
+              "legendFormat": "idle"
+            }
+          ]
+        }
+      ]
+    }

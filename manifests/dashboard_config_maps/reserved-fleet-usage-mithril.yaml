@@ -1,0 +1,659 @@
+# HISTORICAL dashboard — Mithril fleet decommissioned 2026-08-04, kept per mgmt
+# request as a separate dashboard (the Mithril rows were removed from the live
+# DO dashboard 2026-08-03; this is those rows, carved out of the pre-removal
+# archive in OpenTofu k8s/at/monitoring/dashboards/archive-mithril-2026-08-04/).
+# Default range pinned to the contract tail (2026-07-01 -> 2026-08-04), refresh
+# off; queries read the retained Mithril history in VictoriaMetrics.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reserved-fleet-usage-mithril-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Fleets"
+data:
+  reserved-fleet-usage-mithril.json: |
+    {
+      "uid": "reserved-fleet-usage-mithril",
+      "title": "Reserved Fleet Utilization — Mithril (decommissioned 2026-08-04)",
+      "tags": [
+        "fleets",
+        "gpu",
+        "reserved"
+      ],
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "",
+      "time": {
+        "from": "2026-07-01T00:00:00Z",
+        "to": "2026-08-04T00:00:00Z"
+      },
+      "templating": {
+        "list": []
+      },
+      "panels": [
+        {
+          "id": 101,
+          "type": "row",
+          "title": "Mithril",
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": 11,
+          "type": "gauge",
+          "title": "CPU · current",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 0,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "instant": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",fleet=~\"mithril.*\"}[5m])))"
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "type": "gauge",
+          "title": "Memory · current",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 5,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "instant": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * (1 - sum(node_memory_MemAvailable_bytes{fleet=~\"mithril.*\"}) / sum(node_memory_MemTotal_bytes{fleet=~\"mithril.*\"}))"
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "type": "gauge",
+          "title": "GPU · current",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 10,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "instant": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"})"
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "type": "gauge",
+          "title": "GPU Memory · current",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 15,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "instant": true,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * sum(DCGM_FI_DEV_FB_USED{fleet=~\"mithril.*\"}) / (sum(DCGM_FI_DEV_FB_USED{fleet=~\"mithril.*\"}) + sum(DCGM_FI_DEV_FB_FREE{fleet=~\"mithril.*\"}))"
+            }
+          ]
+        },
+        {
+          "id": 24,
+          "type": "gauge",
+          "title": "GPU Reserved % · current",
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 20,
+            "y": 1
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * sum((dstack_instance_gpus_busy{fleet=~\"mithril.*\"} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{fleet=~\"mithril.*\"} and on(instance) dstack_instance_unreachable == 0))",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "id": 15,
+          "type": "stat",
+          "title": "CPU · avg over range",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 0,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",fleet=~\"mithril.*\"}[5m])))"
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "type": "stat",
+          "title": "Memory · avg over range",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 5,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * (1 - sum(node_memory_MemAvailable_bytes{fleet=~\"mithril.*\"}) / sum(node_memory_MemTotal_bytes{fleet=~\"mithril.*\"}))"
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "type": "stat",
+          "title": "GPU · avg over range",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 10,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "avg(DCGM_FI_DEV_GPU_UTIL{fleet=~\"mithril.*\"})"
+            }
+          ]
+        },
+        {
+          "id": 18,
+          "type": "stat",
+          "title": "GPU Memory · avg over range",
+          "gridPos": {
+            "h": 5,
+            "w": 5,
+            "x": 15,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * sum(DCGM_FI_DEV_FB_USED{fleet=~\"mithril.*\"}) / (sum(DCGM_FI_DEV_FB_USED{fleet=~\"mithril.*\"}) + sum(DCGM_FI_DEV_FB_FREE{fleet=~\"mithril.*\"}))"
+            }
+          ]
+        },
+        {
+          "id": 28,
+          "type": "stat",
+          "title": "GPU Reserved % · avg over range",
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 20,
+            "y": 6
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "continuous-RdYlGr"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 33
+                  },
+                  {
+                    "color": "green",
+                    "value": 66
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "mean"
+              ]
+            },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "100 * sum((dstack_instance_gpus_busy{fleet=~\"mithril.*\"} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{fleet=~\"mithril.*\"} and on(instance) dstack_instance_unreachable == 0))"
+            }
+          ]
+        }
+      ]
+    }
