@@ -1,0 +1,108 @@
+# Weekly Slack report of reserved-fleet (DigitalOcean) GPU/CPU usage
+# (do-metrics-consolidation). A CronJob queries VictoriaMetrics for the 7-day
+# average of the same metrics as the reserved-fleet-usage dashboard and posts a
+# Block Kit message to Slack via an Incoming Webhook, with a button linking to the
+# Teleport-gated live dashboard (management opens it with their Teleport login).
+#
+# Webhook is NOT in git — stored in Secret `fleet-report-slack` (key webhook-url):
+#   kubectl -n monitoring create secret generic fleet-report-slack \
+#     --from-literal=webhook-url='https://hooks.slack.com/services/XXX/YYY/ZZZ'
+# On-demand run:  kubectl -n monitoring create job --from=cronjob/weekly-fleet-report adhoc-$(date +%s)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weekly-fleet-report-script
+  namespace: monitoring
+data:
+  report.py: |
+    import json, os, time, urllib.request, urllib.parse, datetime
+
+    VM = os.environ.get("VM_URL", "http://victoria-metrics.monitoring.svc:8428")
+    WEBHOOK = os.environ["SLACK_WEBHOOK_URL"]
+    # Freeze the link to THIS 7-day window (absolute epoch-ms) so opening an old
+    # report shows that week's data, not the latest.
+    END_MS = int(time.time() * 1000)
+    START_MS = END_MS - 7 * 86400 * 1000
+    DASH = "https://at-grafana.metamorphic.teleport.sh/d/reserved-fleet-detail?from=%d&to=%d" % (START_MS, END_MS)
+
+    def q(expr):
+        url = VM + "/api/v1/query?query=" + urllib.parse.quote(expr)
+        with urllib.request.urlopen(url, timeout=25) as r:
+            res = json.load(r)["data"]["result"]
+        return float(res[0]["value"][1]) if res else None
+
+    def avg7d(inner):
+        return q("avg_over_time((%s)[7d:10m])" % inner)
+
+    def metrics(F):
+        return {
+            "CPU": avg7d('100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",%s}[5m])))' % F),
+            "Memory": avg7d('100 * (1 - sum(node_memory_MemAvailable_bytes{%s}) / sum(node_memory_MemTotal_bytes{%s}))' % (F, F)),
+            "GPU": avg7d('avg(DCGM_FI_DEV_GPU_UTIL{%s})' % F),
+            "GPU Mem": avg7d('100 * sum(DCGM_FI_DEV_FB_USED{%s}) / (sum(DCGM_FI_DEV_FB_USED{%s}) + sum(DCGM_FI_DEV_FB_FREE{%s}))' % (F, F, F)),
+        }
+
+    def fmt(v):
+        return "—" if v is None else ("%.0f%%" % v)
+
+    end_d = datetime.date.fromtimestamp(END_MS / 1000)
+    start_d = datetime.date.fromtimestamp(START_MS / 1000)
+    rng = "%s – %s" % (start_d.strftime("%b %d").replace(" 0", " "), end_d.strftime("%b %d, %Y").replace(" 0", " "))
+
+    # Mithril removed 2026-08-06: the reservation ended 01:00 UTC that day, so the
+    # fleet would report "—" forever. A one-off FINAL Mithril edition covering
+    # 2026-08-03 15:00 -> 2026-08-06 01:00 UTC was posted before this change.
+    FLEETS = [("DigitalOcean", 'fleet="digital-ocean"')]
+    # Compact: one section block, one line per fleet (CPU · Mem · GPU · GPU-mem), then the button.
+    text = "*\U0001F4CA Reserved Fleet — Weekly Summary*  _%s · 7-day avg_" % rng
+    for name, F in FLEETS:
+        m = metrics(F)
+        text += "\n*%s* — CPU %s · Mem %s · GPU %s · GPU-mem %s" % (
+            name, fmt(m["CPU"]), fmt(m["Memory"]), fmt(m["GPU"]), fmt(m["GPU Mem"]))
+    blocks = [
+        {"type": "section", "text": {"type": "mrkdwn", "text": text}},
+        {"type": "actions", "elements": [
+            {"type": "button", "text": {"type": "plain_text", "text": "\U0001F4C8 Detailed report", "emoji": True}, "url": DASH, "style": "primary"}]},
+    ]
+
+    payload = {"text": "Reserved Fleet Weekly Usage (%s)" % rng, "blocks": blocks}
+    req = urllib.request.Request(WEBHOOK, data=json.dumps(payload).encode(),
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=25) as r:
+        print("slack response:", r.status, r.read().decode()[:200])
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekly-fleet-report
+  namespace: monitoring
+spec:
+  # 15:00 UTC Monday = 08:00 Pacific (PDT). No timeZone field -> version-safe.
+  schedule: "0 15 * * 1"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: report
+              image: python:3.12-alpine
+              command: ["python3", "/script/report.py"]
+              env:
+                - name: SLACK_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: fleet-report-slack
+                      key: webhook-url
+              volumeMounts:
+                - name: script
+                  mountPath: /script
+          volumes:
+            - name: script
+              configMap:
+                name: weekly-fleet-report-script
