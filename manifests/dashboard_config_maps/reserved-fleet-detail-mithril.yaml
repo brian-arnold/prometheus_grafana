@@ -1,8 +1,8 @@
-# HISTORICAL dashboard — Mithril fleet decommissioned 2026-08-04, kept per mgmt
+# HISTORICAL dashboard — Mithril fleet decommissioned 2026-08-06, kept per mgmt
 # request as a separate dashboard (the Mithril rows were removed from the live
 # DO dashboard 2026-08-03; this is those rows, carved out of the pre-removal
 # archive in OpenTofu k8s/at/monitoring/dashboards/archive-mithril-2026-08-04/).
-# Default range pinned to the contract tail (2026-07-01 -> 2026-08-04), refresh
+# Default range pinned to the contract tail (2026-07-01 -> 2026-08-06), refresh
 # off; queries read the retained Mithril history in VictoriaMetrics.
 apiVersion: v1
 kind: ConfigMap
@@ -17,7 +17,7 @@ data:
   reserved-fleet-detail-mithril.json: |
     {
       "uid": "reserved-fleet-detail-mithril",
-      "title": "Reserved Fleet — Averages & Per-Node Detail — Mithril (decommissioned 2026-08-04)",
+      "title": "Reserved Fleet — Averages & Per-Node Detail — Mithril (decommissioned 2026-08-06)",
       "tags": [
         "fleets",
         "gpu",
@@ -28,7 +28,7 @@ data:
       "refresh": "",
       "time": {
         "from": "2026-07-01T00:00:00Z",
-        "to": "2026-08-04T00:00:00Z"
+        "to": "2026-08-06T02:00:00Z"
       },
       "templating": {
         "list": []

@@ -3,7 +3,7 @@
 # per-node detail; groups by label `node` (ny2g2r*). Averages row includes
 # Usage Efficiency = max(fleet-avg CPU, fleet-avg GPU) - the bottleneck resource
 # (added 2026-08-03). Mithril sections removed 2026-08-03 (fleet decommissioned
-# 2026-08-04; metric history kept in VM - pre-removal JSON archived in OpenTofu
+# 2026-08-06; metric history kept in VM - pre-removal JSON archived in OpenTofu
 # k8s/at/monitoring/dashboards/archive-mithril-2026-08-04/). Linked from the
 # weekly Slack report; Teleport-gated via the at-grafana app.
 apiVersion: v1

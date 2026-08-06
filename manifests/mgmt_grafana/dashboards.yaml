@@ -3,8 +3,8 @@
 # reserved-fleet-cost-do: per-fleet cost dashboard (the combined reserved-fleet-cost
 # was split per mgmt request 2026-07-29). reserved-fleet-cost-mithril: removed
 # 2026-08-03 for the fleet decommission, RESTORED 2026-08-03 per mgmt request as
-# a historical dashboard — retitled "(decommissioned 2026-08-04)", default time
-# range fixed to the contract tail (2026-07-01 → 2026-08-04, auto-refresh off)
+# a historical dashboard — retitled "(decommissioned 2026-08-06)", default time
+# range fixed to the contract tail (2026-07-01 → 2026-08-06, auto-refresh off)
 # since live ranges show no data after decommission; the Mithril metric history
 # lives in VictoriaMetrics indefinitely.
 # Inputs per dashboard = TOTAL CONTRACT COST + CONTRACT LENGTH IN DAYS (textbox
@@ -518,7 +518,7 @@ data:
   reserved-fleet-cost-mithril.json: |
     {
       "uid": "reserved-fleet-cost-mithril",
-      "title": "Reserved Fleet Cost — Mithril (decommissioned 2026-08-04)",
+      "title": "Reserved Fleet Cost — Mithril (decommissioned 2026-08-06)",
       "tags": [
         "fleets",
         "gpu",
@@ -531,7 +531,7 @@ data:
       "refresh": "",
       "time": {
         "from": "2026-07-01T00:00:00Z",
-        "to": "2026-08-04T00:00:00Z"
+        "to": "2026-08-06T02:00:00Z"
       },
       "templating": {
         "list": [
