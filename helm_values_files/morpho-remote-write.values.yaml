@@ -1,0 +1,29 @@
+# MORPHO cluster overlay — remote_write into the at VictoriaMetrics LTS
+# (do-metrics-consolidation pattern, extended to morpho 2026-08-20).
+#
+# Applied ON TOP of morpho's existing kube-prometheus-stack release
+# (kube context `morpho`, release `prometheus`, ns `monitoring`):
+#
+#   helm --kube-context morpho -n monitoring upgrade prometheus \
+#     prometheus-community/kube-prometheus-stack --version 85.1.3 \
+#     --reuse-values -f morpho-remote-write.values.yaml
+#
+# Prereqs (both out-of-band, NOT in git):
+#   - Secret `vm-rw-token` (key `token`) in morpho's monitoring ns — same bearer
+#     token as the at cluster's monitoring/vm-rw-token (vmauth checks it).
+#   - morpho's egress IP allowlisted for the metrics-rw SNI on the rgw-edge
+#     HAProxy (rook repo, main/rgw-edge/haproxy-configmap.yaml, acl morpho_nodes).
+#
+# Every series gets external label cluster=morpho, so at-grafana dashboards can
+# select it from the VictoriaMetrics datasource with {cluster="morpho"}.
+prometheus:
+  prometheusSpec:
+    externalLabels:
+      cluster: morpho
+    remoteWrite:
+      - url: https://metrics-rw.enigmatic.stanford.edu/api/v1/write
+        authorization:
+          type: Bearer
+          credentials:
+            name: vm-rw-token
+            key: token
