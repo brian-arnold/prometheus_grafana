@@ -59,6 +59,19 @@ prometheus-node-exporter:
     rollingUpdate:
       maxUnavailable: 5
   # this section here was taken from the default values file and modified to exclude |mnt/lbm[0-9]+ 
+# kube-state-metrics: expose the SkyPilot identity that lives only in pod
+# metadata. Labels: skypilot-cluster-name (cluster name on cloud, i.e. with the
+# hash) and skypilot-user (sanitised: ben@metamorphic.com -> benmetamorphiccom) —
+# these are what SkyPilot's own chart dashboards (skypilot-dcgm-gpu) join on.
+# Annotations: the same two keys but *clean* (ben-dev-0, ben@metamorphic.com) —
+# what a human wants in a table. Without an allowlist kube-state-metrics emits
+# kube_pod_labels / kube_pod_annotations for no pod at all.
+kube-state-metrics:
+  metricLabelsAllowlist:
+    - pods=[skypilot-cluster-name,skypilot-user,job-group]
+  metricAnnotationsAllowlist:
+    - pods=[skypilot-cluster-name,skypilot-user,skypilot-workspace]
+
   extraArgs:
     - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+|mnt/lbm[0-9]+)($|/)
     - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
