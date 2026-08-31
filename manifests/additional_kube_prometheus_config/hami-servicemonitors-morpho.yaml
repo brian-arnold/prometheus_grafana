@@ -1,0 +1,47 @@
+# MORPHO cluster — ServiceMonitors for HAMi (2026-08-31).
+# Apply with:  kubectl --context morpho apply -f hami-servicemonitors-morpho.yaml
+#
+# morpho's kube-prometheus-stack selects ServiceMonitors labelled
+# release=prometheus in any namespace; everything it scrapes is remote-written
+# to the at VictoriaMetrics with external label cluster=morpho (see
+# helm_values_files/morpho-remote-write.values.yaml). These two monitors are
+# the morpho twins of app-gitops fleet-monitoring's
+# hami-vgpu-monitor-servicemonitor.yaml / hami-scheduler-servicemonitor.yaml,
+# and light up the morpho rows of the skypilot-resource-avail per-GPU table.
+#
+# 1) vgpu-monitor (device-plugin sidecar, port 9394): per-workload GPU series —
+#    hami_vgpu_memory_{used,limit}_bytes, hami_container_device_utilization_ratio,
+#    hami_host_gpu_*. honorLabels is load-bearing: the series' namespace/pod are
+#    the workload's, not the plugin pod's.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hami-vgpu-monitor
+  namespace: kube-system
+  labels: { release: prometheus }
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hami
+      app.kubernetes.io/instance: hami
+      app.kubernetes.io/component: hami-device-plugin
+  endpoints:
+    - { port: monitorport, path: /metrics, interval: 30s, scrapeTimeout: 20s, honorLabels: true }
+---
+# 2) scheduler (port "monitor" 31993 -> 9395): per-physical-GPU allocation
+#    ledger with node + device_type labels — hami_gpu_memory_limit_bytes (total),
+#    hami_gpu_memory_allocated_bytes (booked), hami_node_gpu_overview.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hami-scheduler
+  namespace: kube-system
+  labels: { release: prometheus }
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hami
+      app.kubernetes.io/instance: hami
+      app.kubernetes.io/component: hami-scheduler
+  endpoints:
+    - { port: monitor, path: /metrics, interval: 30s, scrapeTimeout: 20s }
