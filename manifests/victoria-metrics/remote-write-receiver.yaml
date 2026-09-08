@@ -49,6 +49,16 @@ spec:
       labels:
         app: vm-rw-receiver
     spec:
+      # Keep the 2 replicas on different nodes so a single node failure doesn't
+      # take the whole DO/morpho ingest path down. Soft (ScheduleAnyway) so a
+      # rollout is never blocked when only one schedulable node is available.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: vm-rw-receiver
       containers:
         - name: vmauth
           image: victoriametrics/vmauth:v1.148.0
