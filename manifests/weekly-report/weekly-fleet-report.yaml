@@ -1,6 +1,7 @@
 # Weekly Slack report of reserved-fleet (DigitalOcean) GPU/CPU usage
 # (do-metrics-consolidation). A CronJob queries VictoriaMetrics for the 7-day
-# average of the same metrics as the reserved-fleet-usage dashboard and posts a
+# average of the same metrics as the reserved-fleet-usage dashboard (plus the
+# dstack GPU-reservation % from reserved-fleet-detail) and posts a
 # Block Kit message to Slack via an Incoming Webhook, with a button linking to the
 # Teleport-gated live dashboard (management opens it with their Teleport login).
 #
@@ -35,12 +36,18 @@ data:
     def avg7d(inner):
         return q("avg_over_time((%s)[7d:10m])" % inner)
 
-    def metrics(F):
+    def metrics(F, D):
+        # F = node/DCGM exporter selector, D = dstack-exporter selector (the two
+        # use different `fleet` label values). "GPU Reserved" = share of DO GPUs
+        # held by dstack jobs (sum busy / sum total over reachable instances) --
+        # the same query as the "GPU reservation % (avg over range)" stat on
+        # reserved-fleet-detail. Reserved != utilized: a GPU can be held idle.
         return {
             "CPU": avg7d('100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",%s}[5m])))' % F),
             "Memory": avg7d('100 * (1 - sum(node_memory_MemAvailable_bytes{%s}) / sum(node_memory_MemTotal_bytes{%s}))' % (F, F)),
             "GPU": avg7d('avg(DCGM_FI_DEV_GPU_UTIL{%s})' % F),
             "GPU Mem": avg7d('100 * sum(DCGM_FI_DEV_FB_USED{%s}) / (sum(DCGM_FI_DEV_FB_USED{%s}) + sum(DCGM_FI_DEV_FB_FREE{%s}))' % (F, F, F)),
+            "GPU Reserved": avg7d('100 * sum((dstack_instance_gpus_busy{%s} and on(instance) dstack_instance_unreachable == 0)) / sum((dstack_instance_gpus_total{%s} and on(instance) dstack_instance_unreachable == 0))' % (D, D)),
         }
 
     def fmt(v):
@@ -53,13 +60,14 @@ data:
     # Mithril removed 2026-08-06: the reservation ended 01:00 UTC that day, so the
     # fleet would report "—" forever. A one-off FINAL Mithril edition covering
     # 2026-08-03 15:00 -> 2026-08-06 01:00 UTC was posted before this change.
-    FLEETS = [("DigitalOcean", 'fleet="digital-ocean"')]
-    # Compact: one section block, one line per fleet (CPU · Mem · GPU · GPU-mem), then the button.
+    # (name, node/DCGM exporter selector, dstack-exporter selector)
+    FLEETS = [("DigitalOcean", 'fleet="digital-ocean"', 'fleet="digital-ocean-64"')]
+    # Compact: one section block, one line per fleet (CPU · Mem · GPU · GPU-mem · GPU-reserved), then the button.
     text = "*\U0001F4CA Reserved Fleet — Weekly Summary*  _%s · 7-day avg_" % rng
-    for name, F in FLEETS:
-        m = metrics(F)
-        text += "\n*%s* — CPU %s · Mem %s · GPU %s · GPU-mem %s" % (
-            name, fmt(m["CPU"]), fmt(m["Memory"]), fmt(m["GPU"]), fmt(m["GPU Mem"]))
+    for name, F, D in FLEETS:
+        m = metrics(F, D)
+        text += "\n*%s* — CPU %s · Mem %s · GPU %s · GPU-mem %s · GPU-reserved %s" % (
+            name, fmt(m["CPU"]), fmt(m["Memory"]), fmt(m["GPU"]), fmt(m["GPU Mem"]), fmt(m["GPU Reserved"]))
     blocks = [
         {"type": "section", "text": {"type": "mrkdwn", "text": text}},
         {"type": "actions", "elements": [
