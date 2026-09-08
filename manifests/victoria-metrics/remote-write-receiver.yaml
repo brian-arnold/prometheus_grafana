@@ -1,0 +1,109 @@
+# External remote-write receiver front for VictoriaMetrics (do-metrics-consolidation
+# Phase 3). vmauth terminates TLS (cert for metrics-rw.enigmatic.stanford.edu, issued
+# by cert-manager DNS-01) and enforces a bearer token, then proxies to VM's
+# /api/v1/write. Reached by the DO fleet through the at rgw-edge SNI HAProxy
+# (backend added separately, gated to do_nodes).
+#
+# Secrets (NOT in git, created via kubectl):
+#   vm-rw-auth   -> auth.yml with the bearer token (mounted at /config). Since
+#                   2026-09-08 the token is write-only: the user entry uses a url_map
+#                   with src_paths ["/api/v1/write"] (NOT a bare url_prefix), so a
+#                   leaked token cannot query or delete series. Any other path
+#                   returns 400 "missing route". Shape:
+#                     users:
+#                       - bearer_token: <token>
+#                         url_map:
+#                           - src_paths: ["/api/v1/write"]
+#                             url_prefix: "http://victoria-metrics.monitoring.svc:8428/"
+#                   vmauth does not hot-reload the mounted Secret -> rollout restart.
+#   vm-rw-token  -> raw token, handed to the DO per-node vmagents + morpho Prometheus
+#   metrics-rw-tls -> the cert-manager-issued cert (below)
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: metrics-rw-tls
+  namespace: monitoring
+spec:
+  secretName: metrics-rw-tls
+  dnsNames:
+    - metrics-rw.enigmatic.stanford.edu
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vm-rw-receiver
+  namespace: monitoring
+  labels:
+    app: vm-rw-receiver
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vm-rw-receiver
+  template:
+    metadata:
+      labels:
+        app: vm-rw-receiver
+    spec:
+      # Keep the 2 replicas on different nodes so a single node failure doesn't
+      # take the whole DO/morpho ingest path down. Soft (ScheduleAnyway) so a
+      # rollout is never blocked when only one schedulable node is available.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: vm-rw-receiver
+      containers:
+        - name: vmauth
+          image: victoriametrics/vmauth:v1.148.0
+          args:
+            - -auth.config=/config/auth.yml
+            - -httpListenAddr=:8427
+            - -tls=true
+            - -tlsCertFile=/tls/tls.crt
+            - -tlsKeyFile=/tls/tls.key
+          ports:
+            - containerPort: 8427
+              name: https
+          readinessProbe:
+            httpGet: { path: /health, port: 8427, scheme: HTTPS }
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests: { cpu: "50m", memory: 64Mi }
+            limits: { memory: 256Mi }
+          volumeMounts:
+            - name: auth
+              mountPath: /config
+              readOnly: true
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+      volumes:
+        - name: auth
+          secret:
+            secretName: vm-rw-auth
+        - name: tls
+          secret:
+            secretName: metrics-rw-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-rw-receiver
+  namespace: monitoring
+  labels:
+    app: vm-rw-receiver
+spec:
+  selector:
+    app: vm-rw-receiver
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8427
